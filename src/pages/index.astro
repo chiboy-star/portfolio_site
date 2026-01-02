@@ -1,27 +1,30 @@
 ---
-import MainLayout from '../layout/MainLayout.astro';
+import MainLayout from '../layouts/MainLayout.astro';
 import ProjectCard from '../components/ProjectCard.astro';
+import Skills from '../components/Skills.astro';
 ---
 
 <MainLayout title="Your Name | Junior Developer">
     
     <section class="mb-16 pt-10">
         <h1 class="text-5xl font-extrabold text-white mb-6 tracking-tight">
-            Hi, I'm <span class="text-blue-500">Madueke Chinemerem</span>.
+            Hi, I'm <span class="text-blue-500">Your Name</span>.
         </h1>
         <p class="text-xl text-slate-400 max-w-lg leading-relaxed">
             I'm a Junior Developer focusing on building accessible, pixel-perfect web experiences. Currently looking for internships.
         </p>
         
         <div class="mt-8 flex gap-4">
-            <a href="chinemeremmadueke1@gmail.com" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition-colors">
+            <a href="mailto:your@email.com" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition-colors">
                 Contact Me
             </a>
-            <a href="https://github.com/chiboy-star" class="border border-slate-600 hover:border-slate-400 text-slate-300 py-2 px-6 rounded-md transition-colors">
+            <a href="https://github.com/yourusername" class="border border-slate-600 hover:border-slate-400 text-slate-300 py-2 px-6 rounded-md transition-colors">
                 GitHub
             </a>
         </div>
     </section>
+
+    <Skills />
 
     <section>
         <h2 class="text-2xl font-bold text-white mb-8 border-b border-slate-700 pb-2">
