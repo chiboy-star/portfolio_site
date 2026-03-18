@@ -1,26 +1,51 @@
 ---
+// Skills.astro
 import { Icon } from 'astro-icon/components';
 
+// Notice how HTML, CSS, Figma, etc. don't have a 'link' property
 const skills = [
-  { name: 'JavaScript', icon: 'simple-icons:javascript', color: 'text-yellow-400' },
-  { name: 'TypeScript', icon: 'simple-icons:typescript', color: 'text-blue-500' },
+  { name: 'JavaScript', icon: 'simple-icons:javascript', color: 'text-yellow-400', link: 'https://github.com/chiboy-star?tab=repositories&q=javascript' },
   { name: 'React', icon: 'simple-icons:react', color: 'text-cyan-400' },
-  { name: 'Tailwind', icon: 'simple-icons:tailwindcss', color: 'text-cyan-300' },
-  { name: 'Node.js', icon: 'simple-icons:nodedotjs', color: 'text-green-500' },
-  { name: 'Git', icon: 'simple-icons:git', color: 'text-orange-500' },
+  { name: 'Next.js', icon: 'simple-icons:nextdotjs', color: 'text-white' },
+  { name: 'Tailwind CSS', icon: 'simple-icons:tailwindcss', color: 'text-cyan-300' },
+  { name: 'HTML5', icon: 'simple-icons:html5', color: 'text-orange-500' },
+  { name: 'CSS3', icon: 'simple-icons:css3', color: 'text-blue-500' },
+  { name: 'Figma', icon: 'simple-icons:figma', color: 'text-purple-400' },
+  { name: 'Git', icon: 'simple-icons:git', color: 'text-orange-600' },
+  { name: 'Rust', icon: 'simple-icons:rust', color: 'text-orange-400', link: 'https://github.com/chiboy-star?tab=repositories&q=rust' },
+  { name: 'Python', icon: 'simple-icons:python', color: 'text-blue-400', link: 'https://github.com/chiboy-star?tab=repositories&q=python' },
+  { name: 'C++', icon: 'simple-icons:cplusplus', color: 'text-blue-600', link: 'https://github.com/chiboy-star?tab=repositories&q=cpp' },
 ];
 ---
 
 <section class="mb-16">
     <h2 class="text-2xl font-bold text-white mb-6 border-b border-slate-700 pb-2">
-        Technical Skills
+        Languages & Tools
     </h2>
-    <div class="grid grid-cols-3 sm:grid-cols-6 gap-4">
-        {skills.map((skill) => (
-            <div class="flex flex-col items-center p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors border border-slate-700 hover:border-slate-600">
-                <Icon name={skill.icon} class={`w-8 h-8 mb-2 ${skill.color}`} />
-                <span class="text-sm font-medium text-slate-300">{skill.name}</span>
-            </div>
-        ))}
+    <p class="text-slate-400 mb-6 text-sm">A mix of my core stack and languages I'm exploring. Clickable icons link to my related repositories.</p>
+    
+    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+        {skills.map((skill) => {
+            // Check if the skill has a link
+            const hasLink = !!skill.link;
+            
+            // Common classes for both the <a> and <div> tags so they look identical
+            const cardClasses = "flex flex-col items-center p-4 bg-slate-800/50 rounded-lg transition-colors border border-slate-700 group " + 
+                               (hasLink ? "hover:bg-slate-700 hover:border-slate-500 cursor-pointer" : "");
+
+            return hasLink ? (
+                /* Render an anchor tag if there is a link */
+                <a href={skill.link} target="_blank" rel="noopener noreferrer" class={cardClasses}>
+                    <Icon name={skill.icon} class={`w-10 h-10 mb-3 transition-transform group-hover:scale-110 ${skill.color}`} />
+                    <span class="text-sm font-medium text-slate-300 group-hover:text-white text-center">{skill.name}</span>
+                </a>
+            ) : (
+                /* Render a standard div if there is no link */
+                <div class={cardClasses}>
+                    <Icon name={skill.icon} class={`w-10 h-10 mb-3 ${skill.color}`} />
+                    <span class="text-sm font-medium text-slate-300 text-center">{skill.name}</span>
+                </div>
+            );
+        })}
     </div>
 </section>
