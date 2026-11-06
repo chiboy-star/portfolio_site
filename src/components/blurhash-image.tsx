@@ -36,7 +36,7 @@ export function BlurHashImage({
         imageData.data.set(pixels);
         ctx.putImageData(imageData, 0, 0);
       }
-    } catch (e) {
+    } catch {
       // Ignore blurhash decoding fallback
     }
   }, [blurhash]);

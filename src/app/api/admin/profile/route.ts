@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     try {
       revalidateTag("profile");
       revalidatePath("/");
-    } catch (e) {
+    } catch {
       // revalidateTag might be a no-op in dev
     }
 

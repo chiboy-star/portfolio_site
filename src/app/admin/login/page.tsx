@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { SiGithub } from "@icons-pack/react-simple-icons";
 import { ShieldAlert } from "lucide-react";
 import { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Admin Sign In | Chinemerem Madueke",
@@ -39,15 +40,14 @@ export default function AdminLoginPage() {
         </form>
 
         <div className="mt-6 text-center">
-          <a
+          <Link
             href="/"
             className="text-xs text-[var(--muted)] hover:text-[var(--accent)] transition-colors"
           >
             ← Return to portfolio
-          </a>
+          </Link>
         </div>
       </div>
     </div>
   );
 }
-

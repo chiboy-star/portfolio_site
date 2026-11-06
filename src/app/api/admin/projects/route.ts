@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     try {
       revalidateTag("projects");
       revalidatePath("/");
-    } catch (e) {
+    } catch {
       // revalidateTag might be a no-op in dev
     }
 

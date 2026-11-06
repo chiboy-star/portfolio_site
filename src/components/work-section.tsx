@@ -100,7 +100,7 @@ export function WorkSection({ initialProjects }: WorkSectionProps) {
     startAnimation();
   };
 
-  const onPointerUp = (e: React.PointerEvent) => {
+  const onPointerUp = () => {
     if (!isDraggingRef.current || tier !== "full") return;
     isDraggingRef.current = false;
     const finalIndex = Math.round(targetOffsetRef.current);
@@ -240,7 +240,7 @@ export function WorkSection({ initialProjects }: WorkSectionProps) {
                   {/* Caption under card */}
                   <div className="mt-3 text-center text-xs font-mono text-[var(--muted)]">
                     <span className={isCenter ? "text-[var(--accent)] font-semibold" : ""}>
-                      0{i + 1} // {project.title}
+                      0{i + 1} {" // "} {project.title}
                     </span>
                   </div>
                 </div>

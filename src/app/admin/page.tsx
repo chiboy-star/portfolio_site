@@ -28,9 +28,7 @@ import {
   Check,
   FileDown,
   Upload,
-  LogOut,
 } from "lucide-react";
-import { SiGithub } from "@icons-pack/react-simple-icons";
 
 export default function AdminPage() {
   const [loading, setLoading] = React.useState(true);
@@ -68,7 +66,7 @@ export default function AdminPage() {
         const prData = await profRes.json();
         setProfile(prData);
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to fetch admin data.");
     } finally {
       setLoading(false);
@@ -141,7 +139,7 @@ export default function AdminPage() {
       const data = await res.json();
       setVersion(data.version);
       toast.success("Projects successfully persisted and published!", { id: toastId });
-    } catch (err) {
+    } catch {
       toast.error("Failed to save projects to cloud storage.", { id: toastId });
     }
   };
@@ -235,7 +233,7 @@ export default function AdminPage() {
 
       if (!res.ok) throw new Error("Failed to update profile");
       toast.success("Profile saved and cache revalidated!", { id: toastId });
-    } catch (err) {
+    } catch {
       toast.error("Error saving profile.", { id: toastId });
     }
   };
@@ -261,7 +259,7 @@ export default function AdminPage() {
         setProfile({ ...profile, cvUrl: data.url });
       }
       toast.success("CV uploaded successfully!", { id: toastId });
-    } catch (err) {
+    } catch {
       toast.error("Failed to upload CV.", { id: toastId });
     }
   };
@@ -355,7 +353,7 @@ export default function AdminPage() {
                 <span className="text-xs text-[var(--muted)]">Show:</span>
                 <select
                   value={filterType}
-                  onChange={(e) => setFilterType(e.target.value as any)}
+                  onChange={(e) => setFilterType(e.target.value as "all" | "visible" | "hidden")}
                   className="h-9 px-3 text-xs rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] outline-none"
                 >
                   <option value="all">All Projects</option>
