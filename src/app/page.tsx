@@ -3,6 +3,9 @@ import { Footer } from "@/components/footer";
 import { FloatingContact } from "@/components/floating-contact";
 import { HeroSection } from "@/components/hero-section";
 import { WorkSection } from "@/components/work-section";
+import { SkillsSection } from "@/components/skills-section";
+import { AboutSection } from "@/components/about-section";
+import { ContactSection } from "@/components/contact-section";
 import { getPublicProjects } from "@/lib/projects";
 import { getProfile } from "@/lib/store";
 
@@ -34,17 +37,16 @@ export default async function Home() {
 
         <WorkSection initialProjects={projects} />
 
-        <section id="skills" className="mx-auto max-w-[1120px] px-4 py-16 sm:px-6 lg:px-8 border-t border-[var(--border)]">
-          <h2 className="text-2xl font-semibold tracking-tight">Skills</h2>
-        </section>
+        <SkillsSection />
 
-        <section id="about" className="mx-auto max-w-[1120px] px-4 py-16 sm:px-6 lg:px-8 border-t border-[var(--border)]">
-          <h2 className="text-2xl font-semibold tracking-tight">About</h2>
-        </section>
+        <AboutSection />
 
-        <section id="contact" className="mx-auto max-w-[1120px] px-4 py-16 sm:px-6 lg:px-8 border-t border-[var(--border)]">
-          <h2 className="text-2xl font-semibold tracking-tight">Contact</h2>
-        </section>
+        <ContactSection
+          email={profile.email}
+          github={profile.github}
+          linkedin={profile.linkedin}
+          cvUrl={profile.cvUrl}
+        />
       </main>
 
       <FloatingContact />
