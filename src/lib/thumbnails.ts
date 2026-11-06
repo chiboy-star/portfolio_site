@@ -44,3 +44,4 @@ export function getProjectThumbnail(
     blurhash: "L00000fQfQfQfQfQfQfQ~qfQfQfQ",
   };
 }
+

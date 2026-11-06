@@ -36,3 +36,4 @@ export async function fetchGitHubRepos(): Promise<Partial<Project>[]> {
     return [];
   }
 }
+

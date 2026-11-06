@@ -107,3 +107,4 @@ export async function getPublicProjects(featuredOnly = false): Promise<Project[]
   }
   return visible;
 }
+

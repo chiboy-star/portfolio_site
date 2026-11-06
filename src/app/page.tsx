@@ -1,6 +1,7 @@
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { FloatingContact } from "@/components/floating-contact";
+import { HeroSection } from "@/components/hero-section";
 import { getPublicProjects } from "@/lib/projects";
 import { getProfile } from "@/lib/store";
 
@@ -24,13 +25,11 @@ export default async function Home() {
       <Header />
 
       <main id="main-content" className="flex-1">
-        <section id="hero" className="mx-auto max-w-[1120px] px-4 py-24 sm:px-6 lg:px-8">
-          <p className="caption-mono text-[var(--muted)] mb-4">{profile.headline}</p>
-          <h1 className="text-4xl font-light tracking-tight text-[var(--fg)]">
-            Chinemerem Madueke
-          </h1>
-          <p className="mt-4 text-[var(--muted)] max-w-2xl">{profile.bio}</p>
-        </section>
+        <HeroSection
+          headline={profile.headline}
+          bio={profile.bio}
+          status={profile.status}
+        />
 
         <section id="work" className="mx-auto max-w-[1120px] px-4 py-16 sm:px-6 lg:px-8 border-t border-[var(--border)]">
           <h2 className="text-2xl font-semibold tracking-tight mb-8">Work</h2>
