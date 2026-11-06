@@ -5,7 +5,15 @@ import { useEffect, useState } from "react";
 export type DeviceTier = "full" | "lite" | "minimal";
 
 export function useTier(): DeviceTier {
-  const [tier, setTier] = useState<DeviceTier>("lite");
+  const [tier, setTier] = useState<DeviceTier>(() => {
+    if (typeof document !== "undefined") {
+      const docTier = document.documentElement.getAttribute("data-tier") as DeviceTier | null;
+      if (docTier === "full" || docTier === "lite" || docTier === "minimal") {
+        return docTier;
+      }
+    }
+    return "lite";
+  });
 
   useEffect(() => {
     const docTier = document.documentElement.getAttribute("data-tier") as DeviceTier | null;

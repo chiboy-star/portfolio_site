@@ -1,6 +1,8 @@
 import { Redis } from "@upstash/redis";
 import { Project, Profile } from "./types";
 import { getProjectThumbnail } from "./thumbnails";
+import fs from "fs";
+import path from "path";
 
 export const SEEDED_PROJECTS: Project[] = [
   {
@@ -58,10 +60,35 @@ export const DEFAULT_PROFILE: Profile = {
   updatedAt: "2026-11-06",
 };
 
-// In-memory fallback if Redis is not configured
-let inMemoryOverrides: Record<string, Partial<Project>> = {};
-let inMemoryProfile: Profile = { ...DEFAULT_PROFILE };
-let inMemoryVersion = 1;
+const CONFIG_FILE_PATH = path.join(process.cwd(), "data", "projects.config.json");
+
+function readConfigFile(): { overrides: Record<string, Partial<Project>>; version: number } {
+  try {
+    if (fs.existsSync(CONFIG_FILE_PATH)) {
+      const content = fs.readFileSync(CONFIG_FILE_PATH, "utf-8");
+      return JSON.parse(content);
+    }
+  } catch (err) {
+    console.warn("[Store] Could not read data/projects.config.json:", err);
+  }
+  return { overrides: {}, version: 1 };
+}
+
+function writeConfigFile(overrides: Record<string, Partial<Project>>, version: number) {
+  try {
+    const dir = path.dirname(CONFIG_FILE_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(
+      CONFIG_FILE_PATH,
+      JSON.stringify({ version, overrides }, null, 2),
+      "utf-8"
+    );
+  } catch (err) {
+    console.warn("[Store] Could not write data/projects.config.json:", err);
+  }
+}
 
 function getRedisClient(): Redis | null {
   const url = process.env.UPSTASH_REDIS_REST_URL;
@@ -79,13 +106,17 @@ function getRedisClient(): Redis | null {
   }
 }
 
+export function getStoreBackend(): "redis" | "file" {
+  return getRedisClient() ? "redis" : "file";
+}
+
 export async function getProjectOverrides(): Promise<{
   overrides: Record<string, Partial<Project>>;
   version: number;
 }> {
   const redis = getRedisClient();
   if (!redis) {
-    return { overrides: inMemoryOverrides, version: inMemoryVersion };
+    return readConfigFile();
   }
 
   try {
@@ -93,8 +124,8 @@ export async function getProjectOverrides(): Promise<{
     const version = (await redis.get<number>("portfolio:version")) || 1;
     return { overrides: data || {}, version };
   } catch (err) {
-    console.error("[Store] Redis error reading project overrides:", err);
-    return { overrides: inMemoryOverrides, version: inMemoryVersion };
+    console.error("[Store] Redis error reading project overrides, falling back to file:", err);
+    return readConfigFile();
   }
 }
 
@@ -123,18 +154,21 @@ export async function saveProjectOverrides(
     }
   }
 
-  // Fallback to in-memory
-  if (expectedVersion !== undefined && expectedVersion !== inMemoryVersion) {
+  // Fallback to file persistence
+  const fileData = readConfigFile();
+  if (expectedVersion !== undefined && expectedVersion !== fileData.version) {
     return {
       success: false,
-      version: inMemoryVersion,
+      version: fileData.version,
       error: "Conflict: data was modified by another request.",
     };
   }
-  inMemoryOverrides = overrides;
-  inMemoryVersion += 1;
-  return { success: true, version: inMemoryVersion };
+  const nextVersion = fileData.version + 1;
+  writeConfigFile(overrides, nextVersion);
+  return { success: true, version: nextVersion };
 }
+
+let inMemoryProfile: Profile = { ...DEFAULT_PROFILE };
 
 export async function getProfile(): Promise<Profile> {
   const redis = getRedisClient();
@@ -167,4 +201,3 @@ export async function saveProfile(profile: Profile): Promise<boolean> {
     return false;
   }
 }
-

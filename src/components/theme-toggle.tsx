@@ -15,7 +15,11 @@ export function ThemeToggle({ className }: { className?: string }) {
 
   if (!mounted) {
     return (
-      <div className={cn("h-8 w-14 rounded-[var(--radius-pill)] border border-[var(--border)] bg-[var(--surface)]", className)} />
+      <button
+        type="button"
+        aria-label="Theme toggle"
+        className={cn("theme-toggle h-8 w-14 rounded-[var(--radius-pill)] border border-[var(--border)] bg-[var(--surface)] opacity-70", className)}
+      />
     );
   }
 

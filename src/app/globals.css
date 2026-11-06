@@ -9,6 +9,7 @@
   --accent: #B45309;
   --accent-fg: #FFFFFF;
   --ring: rgba(180, 83, 9, 0.6);
+  --ink: #0A0A0B;
 
   --radius-card: 16px;
   --radius-control: 10px;
@@ -26,6 +27,11 @@
   --accent: #F5A524;
   --accent-fg: #111113;
   --ring: rgba(245, 165, 36, 0.6);
+  --ink: #0A0A0B;
+}
+
+html[data-intro="skip"] #crack-open-intro {
+  display: none !important;
 }
 
 @theme {

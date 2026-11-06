@@ -1,5 +1,5 @@
 import { Project } from "./types";
-import { SEEDED_PROJECTS, getProjectOverrides } from "./store";
+import { SEEDED_PROJECTS, getProjectOverrides, getStoreBackend } from "./store";
 import { fetchGitHubRepos } from "./github";
 import { fetchVercelProjects } from "./vercel";
 import { getProjectThumbnail } from "./thumbnails";
@@ -10,6 +10,12 @@ export async function getAllProjects(): Promise<Project[]> {
     fetchVercelProjects(),
     getProjectOverrides(),
   ]);
+
+  // Log diagnostic status line
+  const ghStatus = process.env.GITHUB_TOKEN ? "token" : "no token";
+  const vcStatus = process.env.VERCEL_TOKEN ? `${vcProjects.length} projects` : "skipped (VERCEL_TOKEN missing)";
+  const storeBackend = getStoreBackend();
+  console.log(`[projects] github: ${ghRepos.length} repos (${ghStatus}) | vercel: ${vcStatus} | store: ${storeBackend}`);
 
   const projectsMap = new Map<string, Project>();
 
@@ -33,7 +39,7 @@ export async function getAllProjects(): Promise<Project[]> {
         repoUrl: gh.repoUrl,
         liveUrl: gh.liveUrl,
         tags: gh.tags || [],
-        visible: false, // Hidden by default unless seeded or overridden
+        visible: false, // Hidden by default unless in overrides
         featured: false,
         order: 99,
         source: "github",
@@ -55,7 +61,7 @@ export async function getAllProjects(): Promise<Project[]> {
     }
   });
 
-  // 4. Apply Redis overrides
+  // 4. Apply file/Redis overrides
   Object.entries(overrides).forEach(([id, override]) => {
     const project = projectsMap.get(id);
     if (project) {
@@ -68,7 +74,6 @@ export async function getAllProjects(): Promise<Project[]> {
         );
       }
     } else if (override.title) {
-      // Manual project added via admin
       projectsMap.set(id, {
         id,
         title: override.title,
@@ -107,4 +112,3 @@ export async function getPublicProjects(featuredOnly = false): Promise<Project[]
   }
   return visible;
 }
-

@@ -24,6 +24,7 @@ import {
   ExternalLink,
   Copy,
   Check,
+  RotateCcw,
 } from "lucide-react";
 import { SiGithub, SiLinkedin } from "@icons-pack/react-simple-icons";
 import { toast } from "sonner";
@@ -184,6 +185,21 @@ export function CommandMenu({ open, setOpen, projects = [] }: CommandMenuProps) 
           >
             <FileDown className="mr-2 h-4 w-4 text-[var(--muted)]" />
             <span>View CV / Resume</span>
+          </CommandItem>
+
+          <CommandItem
+            onSelect={() =>
+              runCommand(() => {
+                try {
+                  sessionStorage.removeItem("introSeen");
+                } catch {}
+                window.location.href = "/?intro=1";
+              })
+            }
+          >
+            <RotateCcw className="mr-2 h-4 w-4 text-[var(--accent)]" />
+            <span>Replay Intro</span>
+            <CommandShortcut>?intro=1</CommandShortcut>
           </CommandItem>
         </CommandGroup>
 

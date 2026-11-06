@@ -37,17 +37,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
     authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;
-      const userLogin =
-        auth?.user?.login?.toLowerCase() || auth?.user?.name?.toLowerCase();
+      const isDev = process.env.NODE_ENV === "development";
+      const devBypass = isDev && process.env.ADMIN_DEV_BYPASS === "true";
 
       const isOnAdmin = nextUrl.pathname.startsWith("/admin");
 
       if (isOnAdmin) {
-        if (!process.env.AUTH_GITHUB_ID || !process.env.AUTH_GITHUB_SECRET) {
-          console.warn("[Auth] OAuth credentials not set. Allowing local admin preview.");
+        if (devBypass) {
           return true;
         }
+
+        if (isDev && (!process.env.AUTH_GITHUB_ID || !process.env.AUTH_GITHUB_SECRET)) {
+          return true;
+        }
+
+        const isLoggedIn = !!auth?.user;
+        const userLogin =
+          auth?.user?.login?.toLowerCase() || auth?.user?.name?.toLowerCase();
 
         if (isLoggedIn && userLogin === adminLogin) {
           return true;

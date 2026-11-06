@@ -28,6 +28,9 @@ import {
   Check,
   FileDown,
   Upload,
+  Sparkles,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 
 export default function AdminPage() {
@@ -39,6 +42,8 @@ export default function AdminPage() {
   const [filterType, setFilterType] = React.useState<"all" | "visible" | "hidden">("all");
   const [editingProject, setEditingProject] = React.useState<Project | null>(null);
   const [confirmResetOpen, setConfirmResetOpen] = React.useState(false);
+  const [connections, setConnections] = React.useState<Record<string, { connected: boolean; message: string; missingVar?: string; hasToken?: boolean; storeType?: string }> | null>(null);
+  const [showImportBanner, setShowImportBanner] = React.useState(true);
 
   // Tracked Link Builder state
   const [utmSource, setUtmSource] = React.useState("cv");
@@ -52,9 +57,10 @@ export default function AdminPage() {
   const fetchData = React.useCallback(async () => {
     setLoading(true);
     try {
-      const [projRes, profRes] = await Promise.all([
+      const [projRes, profRes, connRes] = await Promise.all([
         fetch("/api/admin/projects"),
         fetch("/api/admin/profile"),
+        fetch("/api/admin/connections"),
       ]);
 
       if (projRes.ok) {
@@ -65,6 +71,10 @@ export default function AdminPage() {
       if (profRes.ok) {
         const prData = await profRes.json();
         setProfile(prData);
+      }
+      if (connRes.ok) {
+        const cData = await connRes.json();
+        setConnections(cData);
       }
     } catch {
       toast.error("Failed to fetch admin data.");
@@ -325,6 +335,133 @@ export default function AdminPage() {
             </Button>
           </div>
         </header>
+
+        {/* Connections Diagnostic Panel */}
+        {connections && (
+          <div className="mb-6 rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--surface)] p-5">
+            <div className="flex items-center justify-between mb-3 border-b border-[var(--border)] pb-2">
+              <span className="caption-mono text-xs text-[var(--accent)] font-semibold">
+                Connections Diagnostic
+              </span>
+              <span className="text-[11px] font-mono text-[var(--muted)]">
+                Store: {connections.redis?.storeType === "redis" ? "Upstash Redis" : "File (data/projects.config.json)"}
+              </span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {/* GitHub */}
+              <div className="p-3 rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--bg)]/50">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold">GitHub API</span>
+                  {connections.github?.connected ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
+                      <CheckCircle2 className="h-3 w-3" /> CONNECTED
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-mono">
+                      <AlertCircle className="h-3 w-3" /> PUBLIC
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-[var(--muted)] leading-tight">{connections.github?.message}</p>
+              </div>
+
+              {/* Vercel */}
+              <div className="p-3 rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--bg)]/50">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold">Vercel API</span>
+                  {connections.vercel?.connected ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
+                      <CheckCircle2 className="h-3 w-3" /> CONNECTED
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-mono">
+                      <AlertCircle className="h-3 w-3" /> MISSING VAR
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-[var(--muted)] leading-tight">{connections.vercel?.message}</p>
+              </div>
+
+              {/* Storage */}
+              <div className="p-3 rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--bg)]/50">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold">Data Store</span>
+                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
+                    <CheckCircle2 className="h-3 w-3" /> {connections.redis?.storeType === "redis" ? "REDIS" : "FILE FALLBACK"}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[var(--muted)] leading-tight">{connections.redis?.message}</p>
+              </div>
+
+              {/* Blob */}
+              <div className="p-3 rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--bg)]/50">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold">Vercel Blob</span>
+                  {connections.blob?.connected ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
+                      <CheckCircle2 className="h-3 w-3" /> CONNECTED
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-mono">
+                      <AlertCircle className="h-3 w-3" /> LOCAL FALLBACK
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-[var(--muted)] leading-tight">{connections.blob?.message}</p>
+              </div>
+
+              {/* Auth */}
+              <div className="p-3 rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--bg)]/50">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold">Auth.js (v5)</span>
+                  {connections.auth?.connected ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
+                      <CheckCircle2 className="h-3 w-3" /> OAUTH ACTIVE
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-mono">
+                      <AlertCircle className="h-3 w-3" /> DEV BYPASS
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-[var(--muted)] leading-tight">{connections.auth?.message}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* First-Run Import Banner */}
+        {showImportBanner && projects.filter((p) => p.source === "github" && !p.visible).length > 0 && (
+          <div className="mb-6 rounded-[var(--radius-card)] border border-[var(--accent)]/40 bg-[var(--surface)] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3">
+              <Sparkles className="h-5 w-5 text-[var(--accent)] shrink-0 mt-0.5 sm:mt-0" />
+              <div>
+                <h4 className="text-sm font-semibold text-[var(--fg)]">
+                  {projects.filter((p) => p.source === "github" && !p.visible).length} new GitHub repositories found
+                </h4>
+                <p className="text-xs text-[var(--muted)]">
+                  Newly discovered repositories start hidden by default. Review and choose what to display on your portfolio.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setFilterType("hidden")}
+                className="text-xs border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)]/10"
+              >
+                Review Repos
+              </Button>
+              <button
+                onClick={() => setShowImportBanner(false)}
+                className="text-xs text-[var(--muted)] hover:text-[var(--fg)] px-2 py-1"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Admin Tabs */}
         <Tabs defaultValue="projects" className="w-full">

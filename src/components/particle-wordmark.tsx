@@ -10,17 +10,8 @@ interface Particle {
   originY: number;
   vx: number;
   vy: number;
-  color: string;
   size: number;
-}
-
-interface Orb {
-  x: number;
-  y: number;
-  baseX: number;
-  baseY: number;
-  size: number;
-  color: string;
+  type: "fg" | "accent" | "muted";
 }
 
 export function ParticleWordmark() {
@@ -32,6 +23,8 @@ export function ParticleWordmark() {
   const animFrameId = React.useRef<number | null>(null);
   const isSettled = React.useRef(false);
   const isVisible = React.useRef(true);
+  const [hasDrawn, setHasDrawn] = React.useState(false);
+  const colorsRef = React.useRef({ fg: "#EDEDEE", accent: "#F5A524", muted: "#8D8D94" });
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -42,89 +35,156 @@ export function ParticleWordmark() {
     if (!ctx) return;
 
     let particles: Particle[] = [];
-    let orbs: Orb[] = [];
+    let isAssembling = true;
+    let assembleStart = performance.now();
+    const assembleDuration = 900; // ms
 
-    const initOrbs = (w: number, h: number) => {
-      const colors = ["#F5A524", "#8D8D94", "#E4E4DE", "#B45309"];
-      orbs = Array.from({ length: 10 }).map((_, i) => {
-        const x = (w * 0.1) + Math.random() * (w * 0.8);
-        const y = (h * 0.15) + Math.random() * (h * 0.7);
-        return {
-          x,
-          y,
-          baseX: x,
-          baseY: y,
-          size: 2 + (i % 3),
-          color: colors[i % colors.length],
-        };
-      });
+    // Initialize color tokens from CSS variables
+    const readColors = () => {
+      const style = getComputedStyle(document.documentElement);
+      const fg = style.getPropertyValue("--fg").trim() || (document.documentElement.classList.contains("dark") ? "#EDEDEE" : "#111113");
+      const accent = style.getPropertyValue("--accent").trim() || (document.documentElement.classList.contains("dark") ? "#F5A524" : "#B45309");
+      const muted = style.getPropertyValue("--muted").trim() || (document.documentElement.classList.contains("dark") ? "#8D8D94" : "#5E5E66");
+      colorsRef.current = { fg, accent, muted };
+    };
+    readColors();
+
+    const updateColors = () => {
+      readColors();
+      wakeAnimation();
     };
 
-    const buildParticles = () => {
+    const themeObserver = new MutationObserver(updateColors);
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "data-theme"],
+    });
+
+    const initParticles = async () => {
+      // 1. Wait for Geist font to be fully loaded
+      try {
+        if ("fonts" in document) {
+          await Promise.race([
+            Promise.all([
+              document.fonts.load("500 200px Geist"),
+              document.fonts.ready,
+            ]),
+            new Promise((resolve) => setTimeout(resolve, 600)),
+          ]);
+        }
+      } catch {
+        // Fallback gracefully
+      }
+
       const rect = container.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const width = rect.width;
-      const height = Math.min(Math.max(width * 0.35, 220), 400);
+      const isMobile = width < 640;
+      const height = isMobile ? 180 : Math.min(Math.max(width * 0.18, 140), 220);
 
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
 
-      initOrbs(width, height);
-
-      // Offscreen canvas for rasterizing text
+      // 2. Offscreen canvas for sampling
       const offCanvas = document.createElement("canvas");
-      offCanvas.width = width * dpr;
-      offCanvas.height = height * dpr;
-      const offCtx = offCanvas.getContext("2d");
+      offCanvas.width = canvas.width;
+      offCanvas.height = canvas.height;
+      const offCtx = offCanvas.getContext("2d", { willReadFrequently: true });
       if (!offCtx) return;
 
       offCtx.scale(dpr, dpr);
-      const fontSize = Math.max(Math.min(width * 0.082, 84), 28);
-      offCtx.font = `300 ${fontSize}px var(--font-geist-sans), -apple-system, sans-serif`;
+
+      // Fit text to ~80% container width
+      let fontSize = isMobile ? Math.floor(width * 0.12) : Math.floor(width * 0.065);
+      fontSize = Math.min(Math.max(fontSize, 24), 88);
+
+      const computedFont =
+        getComputedStyle(container).fontFamily ||
+        "Geist, -apple-system, BlinkMacSystemFont, sans-serif";
+      offCtx.font = `500 ${fontSize}px ${computedFont}`;
       offCtx.fillStyle = "#ffffff";
       offCtx.textAlign = "center";
       offCtx.textBaseline = "middle";
 
-      // Split into two lines on narrow screens if needed, or single line
-      if (width < 640) {
-        offCtx.fillText("CHINEMEREM", width / 2, height * 0.38);
-        offCtx.fillText("MADUEKE", width / 2, height * 0.62);
-      } else {
-        offCtx.fillText("CHINEMEREM  MADUEKE", width / 2, height / 2);
+      // Measure and fit
+      const textToMeasure = isMobile ? "CHINEMEREM" : "CHINEMEREM MADUEKE";
+      const textWidth = offCtx.measureText(textToMeasure).width;
+      const targetWidth = width * 0.82;
+      if (textWidth > targetWidth && targetWidth > 0) {
+        fontSize = Math.floor(fontSize * (targetWidth / textWidth));
+        offCtx.font = `500 ${fontSize}px ${computedFont}`;
       }
 
-      const imgData = offCtx.getImageData(0, 0, width * dpr, height * dpr).data;
+      if (isMobile) {
+        offCtx.fillText("CHINEMEREM", width / 2, height * 0.35);
+        offCtx.fillText("MADUEKE", width / 2, height * 0.68);
+      } else {
+        offCtx.fillText("CHINEMEREM MADUEKE", width / 2, height / 2);
+      }
+
+      const imgData = offCtx.getImageData(0, 0, canvas.width, canvas.height).data;
       particles = [];
 
-      // Grid sampling step
-      const step = width < 768 ? 4 * dpr : 3 * dpr;
-      const isDark = document.documentElement.classList.contains("dark");
-      const baseColor = isDark ? "#EDEDEE" : "#111113";
+      // Sample every 2 CSS pixels
+      const step = Math.max(1, Math.round(2 * dpr));
+      let minX = width, maxX = 0, minY = height, maxY = 0;
 
-      for (let y = 0; y < height * dpr; y += step) {
-        for (let x = 0; x < width * dpr; x += step) {
-          const idx = (y * width * dpr + x) * 4;
-          if (imgData[idx + 3] > 128) {
-            const posX = x / dpr;
-            const posY = y / dpr;
+      for (let py = 0; py < canvas.height; py += step) {
+        for (let px = 0; px < canvas.width; px += step) {
+          const index = (py * canvas.width + px) * 4;
+          const alpha = imgData[index + 3];
+
+          if (alpha >= 128) {
+            const posX = px / dpr;
+            const posY = py / dpr;
+
+            if (posX < minX) minX = posX;
+            if (posX > maxX) maxX = posX;
+            if (posY < minY) minY = posY;
+            if (posY > maxY) maxY = posY;
+
+            // ±0.6px jitter for dusty texture
+            const jitterX = (Math.random() - 0.5) * 1.2;
+            const jitterY = (Math.random() - 0.5) * 1.2;
+            const homeX = posX + jitterX;
+            const homeY = posY + jitterY;
+
+            // Roll particle color category: ~8% accent, ~5% muted, ~87% fg
+            const roll = Math.random();
+            const type = roll < 0.08 ? "accent" : roll < 0.13 ? "muted" : "fg";
+            const size = type === "accent" ? (Math.random() * 1.2 + 1.3) : (Math.random() * 1.0 + 1.0);
+
+            // Initial scatter position for assembly animation
+            const scatterX = homeX + (Math.random() - 0.5) * width * 0.8;
+            const scatterY = homeY + (Math.random() - 0.5) * height * 0.8;
+
             particles.push({
-              x: posX,
-              y: posY,
-              originX: posX,
-              originY: posY,
+              x: scatterX,
+              y: scatterY,
+              originX: homeX,
+              originY: homeY,
               vx: 0,
               vy: 0,
-              color: baseColor,
-              size: width < 768 ? 1.5 : 1.8,
+              size,
+              type,
             });
           }
         }
       }
 
+      // Check debug param
+      if (typeof window !== "undefined" && window.location.search.includes("debug=particles")) {
+        console.log(`[Particles Debug] Total particles sampled: ${particles.length}`);
+        console.log(`[Particles Debug] Bounding Box: x=[${minX.toFixed(1)}, ${maxX.toFixed(1)}], y=[${minY.toFixed(1)}, ${maxY.toFixed(1)}]`);
+      }
+
+      isAssembling = true;
+      assembleStart = performance.now();
       isSettled.current = false;
       renderFrame();
+      setHasDrawn(true);
     };
 
     const renderFrame = () => {
@@ -138,73 +198,115 @@ export function ParticleWordmark() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, width, height);
 
-      // Draw orbs with subtle parallax
-      orbs.forEach((orb) => {
-        const dx = (pointerPos.current.x - width / 2) * 0.02;
-        const dy = (pointerPos.current.y - height / 2) * 0.02;
-        orb.x = orb.baseX + dx;
-        orb.y = orb.baseY + dy;
+      const now = performance.now();
+      const elapsedAssemble = now - assembleStart;
+      const assembleProgress = Math.min(1, elapsedAssemble / assembleDuration);
+      // Ease out cubic
+      const assembleEase = 1 - Math.pow(1 - assembleProgress, 3);
 
-        ctx.fillStyle = orb.color;
-        ctx.beginPath();
-        ctx.arc(orb.x, orb.y, orb.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
+      if (assembleProgress >= 1) {
+        isAssembling = false;
+      }
 
-      // Update and draw particles
-      let maxVelocity = 0;
-      const mouseRadius = 90;
+      let totalKineticEnergy = 0;
+      const mouseRadius = 100;
       const mouseRadiusSq = mouseRadius * mouseRadius;
 
-      ctx.beginPath();
+      // Group draw calls by color for performance
+      const { fg, accent, muted } = colorsRef.current;
+
+      const fgList: Particle[] = [];
+      const accentList: Particle[] = [];
+      const mutedList: Particle[] = [];
+
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
-        // Interaction with pointer
-        if (tier === "full") {
+        if (isAssembling) {
+          // Animate from scatter toward home
+          p.x = p.x + (p.originX - p.x) * (assembleEase * 0.15 + 0.05);
+          p.y = p.y + (p.originY - p.y) * (assembleEase * 0.15 + 0.05);
+          totalKineticEnergy += 1;
+        } else if (tier === "full") {
+          // Pointer repulsion
           const dx = p.x - pointerPos.current.x;
           const dy = p.y - pointerPos.current.y;
           const distSq = dx * dx + dy * dy;
 
           if (distSq < mouseRadiusSq && distSq > 0) {
             const dist = Math.sqrt(distSq);
-            const force = (1 - dist / mouseRadius) * 8;
+            const force = (1 - dist / mouseRadius) * 9;
             p.vx += (dx / dist) * force;
             p.vy += (dy / dist) * force;
           }
 
           // Spring back to origin
-          const springX = (p.originX - p.x) * 0.08;
-          const springY = (p.originY - p.y) * 0.08;
+          const springX = (p.originX - p.x) * 0.085;
+          const springY = (p.originY - p.y) * 0.085;
           p.vx = (p.vx + springX) * 0.78;
           p.vy = (p.vy + springY) * 0.78;
 
           p.x += p.vx;
           p.y += p.vy;
 
-          const vel = Math.abs(p.vx) + Math.abs(p.vy);
-          if (vel > maxVelocity) maxVelocity = vel;
+          const energy = Math.abs(p.vx) + Math.abs(p.vy);
+          totalKineticEnergy += energy;
         }
 
-        ctx.rect(p.x, p.y, p.size, p.size);
+        if (p.type === "accent") accentList.push(p);
+        else if (p.type === "muted") mutedList.push(p);
+        else fgList.push(p);
       }
 
-      ctx.fillStyle = document.documentElement.classList.contains("dark") ? "#EDEDEE" : "#111113";
+      // Draw FG particles
+      ctx.fillStyle = fg;
+      ctx.beginPath();
+      for (let i = 0; i < fgList.length; i++) {
+        const p = fgList[i];
+        ctx.rect(p.x, p.y, p.size, p.size);
+      }
       ctx.fill();
 
-      // Render custom ring cursor in canvas if fine pointer
+      // Draw Accent particles
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      for (let i = 0; i < accentList.length; i++) {
+        const p = accentList[i];
+        ctx.rect(p.x, p.y, p.size, p.size);
+      }
+      ctx.fill();
+
+      // Draw Muted particles
+      ctx.fillStyle = muted;
+      ctx.beginPath();
+      for (let i = 0; i < mutedList.length; i++) {
+        const p = mutedList[i];
+        ctx.rect(p.x, p.y, p.size, p.size);
+      }
+      ctx.fill();
+
+      // Render 24px ring cursor with 1px accent border if fine pointer
       if (tier === "full" && pointerPos.current.x > 0 && pointerPos.current.x < width) {
-        ctx.strokeStyle = "rgba(245, 165, 36, 0.6)";
+        ctx.strokeStyle = accent;
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(pointerPos.current.x, pointerPos.current.y, 12, 0, Math.PI * 2);
         ctx.stroke();
       }
 
+      // Debug overlay if ?debug=particles
+      if (typeof window !== "undefined" && window.location.search.includes("debug=particles")) {
+        ctx.strokeStyle = "rgba(255, 0, 0, 0.4)";
+        ctx.strokeRect(10, 10, width - 20, height - 20);
+        ctx.fillStyle = "#F5A524";
+        ctx.font = "12px monospace";
+        ctx.fillText(`Particles: ${particles.length}`, 15, 25);
+      }
+
       ctx.restore();
 
-      // Stop rAF when settled and pointer idle
-      if (tier !== "full" || (maxVelocity < 0.05 && !isInteracting.current)) {
+      // Stop rAF loop when settled and idle
+      if (!isAssembling && totalKineticEnergy < 0.08 && !isInteracting.current) {
         isSettled.current = true;
         animFrameId.current = null;
       } else {
@@ -238,7 +340,7 @@ export function ParticleWordmark() {
       wakeAnimation();
     };
 
-    // IntersectionObserver to stop rAF when hero is off-screen
+    // IntersectionObserver to pause when off-screen
     const observer = new IntersectionObserver(([entry]) => {
       isVisible.current = entry.isIntersecting;
       if (entry.isIntersecting) {
@@ -250,20 +352,23 @@ export function ParticleWordmark() {
     });
 
     observer.observe(container);
-    buildParticles();
+    initParticles();
 
     if (tier === "full") {
       canvas.addEventListener("pointermove", handlePointerMove);
       canvas.addEventListener("pointerleave", handlePointerLeave);
     }
 
+    let resizeTimeout: NodeJS.Timeout;
     const handleResize = () => {
-      buildParticles();
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(initParticles, 150);
     };
     window.addEventListener("resize", handleResize);
 
     return () => {
       if (animFrameId.current) cancelAnimationFrame(animFrameId.current);
+      themeObserver.disconnect();
       observer.disconnect();
       window.removeEventListener("resize", handleResize);
       canvas.removeEventListener("pointermove", handlePointerMove);
@@ -273,8 +378,14 @@ export function ParticleWordmark() {
 
   return (
     <div ref={containerRef} className="relative w-full overflow-hidden select-none">
-      {/* Accessible h1 for Screen Readers and SEO */}
-      <h1 className="sr-only">CHINEMEREM MADUEKE</h1>
+      {/* Real h1 stays in DOM; visually hidden once particle frame draws */}
+      <h1
+        className={`text-4xl sm:text-6xl lg:text-7xl font-extralight tracking-widest text-[var(--fg)] uppercase py-6 text-center transition-opacity duration-300 ${
+          hasDrawn ? "sr-only" : "opacity-100"
+        }`}
+      >
+        CHINEMEREM MADUEKE
+      </h1>
 
       {/* Austensor-style Captions around hero */}
       <div className="flex items-center justify-between py-2 border-b border-[var(--border)] mb-4 text-[11px] font-mono tracking-widest text-[var(--muted)] uppercase">
@@ -292,4 +403,3 @@ export function ParticleWordmark() {
     </div>
   );
 }
-

@@ -6,7 +6,19 @@ export default auth((req) => {
   const path = req.nextUrl.pathname;
 
   if (path.startsWith("/admin") || path.startsWith("/api/admin")) {
-    if (!process.env.AUTH_GITHUB_ID || !process.env.AUTH_GITHUB_SECRET) {
+    const isDev = process.env.NODE_ENV === "development";
+    const devBypass = isDev && process.env.ADMIN_DEV_BYPASS === "true";
+
+    if (!isDev && process.env.ADMIN_DEV_BYPASS === "true") {
+      console.warn("[Security Alert] ADMIN_DEV_BYPASS is forbidden and ignored in production builds.");
+    }
+
+    if (devBypass) {
+      return NextResponse.next();
+    }
+
+    // In development without OAuth configured, allow previewing the admin panel
+    if (isDev && (!process.env.AUTH_GITHUB_ID || !process.env.AUTH_GITHUB_SECRET)) {
       return NextResponse.next();
     }
 

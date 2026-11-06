@@ -5,6 +5,7 @@ interface VercelProjectResponse {
     link?: {
       type: string;
       repo: string;
+      org?: string;
     };
     targets?: {
       production?: {
@@ -25,7 +26,6 @@ export async function fetchVercelProjects(): Promise<
 > {
   const token = process.env.VERCEL_TOKEN;
   if (!token) {
-    console.warn("[Vercel] VERCEL_TOKEN is not set. Skipping live Vercel fetch.");
     return [];
   }
 
@@ -51,13 +51,22 @@ export async function fetchVercelProjects(): Promise<
     const data: VercelProjectResponse = await res.json();
     return (data.projects || []).map((p) => {
       let prodUrl = p.targets?.production?.url;
+      if (!prodUrl && p.targets?.production?.alias && p.targets.production.alias.length > 0) {
+        prodUrl = p.targets.production.alias[0];
+      }
       if (prodUrl && !prodUrl.startsWith("http")) {
         prodUrl = `https://${prodUrl}`;
       }
+
+      let linkedRepo = p.link?.repo;
+      if (linkedRepo && p.link?.org && !linkedRepo.includes("/")) {
+        linkedRepo = `${p.link.org}/${linkedRepo}`;
+      }
+
       return {
         projectId: p.id,
         name: p.name,
-        linkedRepo: p.link?.repo,
+        linkedRepo,
         productionUrl: prodUrl,
       };
     });
@@ -66,4 +75,3 @@ export async function fetchVercelProjects(): Promise<
     return [];
   }
 }
-

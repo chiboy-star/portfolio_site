@@ -7,10 +7,7 @@ import { SiGithub, SiLinkedin } from "@icons-pack/react-simple-icons";
 import { FileDown, Mail } from "lucide-react";
 import { useTier } from "@/hooks/use-tier";
 
-const CrackOpenIntro = dynamic(
-  () => import("@/components/crack-open-intro").then((mod) => mod.CrackOpenIntro),
-  { ssr: false }
-);
+import { CrackOpenIntro } from "@/components/crack-open-intro";
 
 const ParticleWordmark = dynamic(
   () => import("@/components/particle-wordmark").then((mod) => mod.ParticleWordmark),
@@ -41,8 +38,8 @@ export function HeroSection({
 
   return (
     <section id="hero" className="relative mx-auto max-w-[1120px] px-4 pt-8 pb-16 sm:px-6 lg:px-8">
-      {/* Crack-open Intro on Full Tier */}
-      {tier === "full" && <CrackOpenIntro />}
+      {/* Crack-open Intro: Server-rendered, visible on first paint unless skipped */}
+      <CrackOpenIntro />
 
       {/* Particle Wordmark or Static Typography Fallback */}
       {tier === "full" ? (

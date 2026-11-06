@@ -22,7 +22,7 @@ export function getProjectThumbnail(
     };
   }
 
-  // 3. Typographic placeholder with initials
+  // 3. Typographic placeholder with initials in Geist, flat --surface, hairline border
   const initials = title
     .split(" ")
     .map((word) => word[0])
@@ -30,11 +30,12 @@ export function getProjectThumbnail(
     .slice(0, 3)
     .toUpperCase();
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
-    <rect width="600" height="360" fill="#111113"/>
-    <rect x="1" y="1" width="598" height="358" fill="none" stroke="#222226" stroke-width="2"/>
-    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#F5A524" font-family="system-ui, sans-serif" font-weight="700" font-size="48" letter-spacing="0.1em">${initials}</text>
-    <text x="50%" y="65%" dominant-baseline="middle" text-anchor="middle" fill="#8D8D94" font-family="system-ui, sans-serif" font-size="14" letter-spacing="0.05em">CODE REPOSITORY</text>
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+    <rect width="800" height="600" fill="#111113"/>
+    <rect x="1" y="1" width="798" height="598" fill="none" stroke="#222226" stroke-width="1.5" rx="16"/>
+    <text x="40" y="60" fill="#8D8D94" font-family="-apple-system, BlinkMacSystemFont, 'Geist Mono', monospace" font-size="13" letter-spacing="0.1em">PROJECT REPOSITORY</text>
+    <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#EDEDEE" font-family="-apple-system, BlinkMacSystemFont, 'Geist', sans-serif" font-weight="300" font-size="72" letter-spacing="0.12em">${initials}</text>
+    <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" fill="#F5A524" font-family="-apple-system, BlinkMacSystemFont, 'Geist Mono', monospace" font-size="12" letter-spacing="0.08em">${title.toUpperCase()}</text>
   </svg>`;
 
   const placeholderUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
