@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "overrides": {
+    "manual:caskayd-sprint": {
+      "title": "Influencer Marketing Web-App",
+      "description": "Serving as Front-end Lead for this platform connecting brands with creators. Built dynamic dashboards and seamless user flows.",
+      "tags": ["Next.js", "Tailwind CSS", "React"],
+      "liveUrl": "https://caskayd-sprint-frontend.vercel.app",
+      "visible": true,
+      "featured": true,
+      "order": 0,
+      "source": "manual"
+    },
+    "gh:chiboy-star/calculator-project": {
+      "title": "Smart Calculator",
+      "description": "A modern, glassmorphism-styled calculator featuring custom logic for rapid thousands (K) and millions (M) multiplier inputs.",
+      "tags": ["JavaScript", "HTML5", "CSS3"],
+      "repoUrl": "https://github.com/chiboy-star/calculator-project",
+      "visible": true,
+      "featured": true,
+      "order": 1,
+      "source": "github"
+    },
+    "gh:chiboy-star/password_generator": {
+      "title": "Secure Password Generator",
+      "description": "A cryptographically secure password generation tool with a responsive UI, utilizing window.crypto for true randomness.",
+      "tags": ["JavaScript", "Web Crypto", "CSS3"],
+      "repoUrl": "https://github.com/chiboy-star/password_generator",
+      "visible": true,
+      "featured": true,
+      "order": 2,
+      "source": "github"
+    }
+  }
+}
+
