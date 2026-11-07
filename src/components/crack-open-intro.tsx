@@ -3,18 +3,10 @@
 import * as React from "react";
 
 export function CrackOpenIntro() {
-  const [visible, setVisible] = React.useState(() => {
-    if (typeof window !== "undefined") {
-      const search = window.location.search;
-      if (search.includes("intro=1")) return true;
-      if (search.includes("intro=0")) return false;
-      try {
-        if (sessionStorage.getItem("introSeen") === "true") return false;
-      } catch {}
-      if (document.documentElement.getAttribute("data-intro") === "skip") return false;
-    }
-    return true;
-  });
+  // Always true initially on server and client to preserve 100% hydration parity.
+  // CSS rule `html[data-intro="skip"] #crack-open-intro { display: none !important; }`
+  // instantly hides it before paint if skipped, with zero layout flash or React mismatch.
+  const [visible, setVisible] = React.useState(true);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const wordmarkRef = React.useRef<HTMLDivElement | null>(null);
 

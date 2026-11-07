@@ -14,7 +14,21 @@ interface Particle {
   type: "fg" | "accent" | "muted";
 }
 
-export function ParticleWordmark() {
+export interface ParticleWordmarkProps {
+  onFrameDrawn?: (count: number) => void;
+  onFail?: () => void;
+  phase?: "entering" | "active" | "exiting";
+  onEntered?: () => void;
+  onExited?: () => void;
+}
+
+export function ParticleWordmark({
+  onFrameDrawn,
+  onFail,
+  phase = "active",
+  onEntered,
+  onExited,
+}: ParticleWordmarkProps) {
   const tier = useTier();
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
@@ -23,8 +37,16 @@ export function ParticleWordmark() {
   const animFrameId = React.useRef<number | null>(null);
   const isSettled = React.useRef(false);
   const isVisible = React.useRef(true);
-  const [hasDrawn, setHasDrawn] = React.useState(false);
+  const firstFrameDrawnRef = React.useRef(false);
   const colorsRef = React.useRef({ fg: "#EDEDEE", accent: "#F5A524", muted: "#8D8D94" });
+
+  // Handle phase exit callback
+  React.useEffect(() => {
+    if (phase === "exiting") {
+      const exitTimer = setTimeout(() => onExited?.(), 600);
+      return () => clearTimeout(exitTimer);
+    }
+  }, [phase, onExited]);
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -32,7 +54,18 @@ export function ParticleWordmark() {
     if (!canvas || !container) return;
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      onFail?.();
+      return;
+    }
+
+    // 1.5-second timeout safeguard: if first particle frame does not draw, fail gracefully
+    const failTimeout = setTimeout(() => {
+      if (!firstFrameDrawnRef.current) {
+        console.warn("[Particles] 1.5s timeout exceeded before first frame drew. Falling back.");
+        onFail?.();
+      }
+    }, 1500);
 
     let particles: Particle[] = [];
     let isAssembling = true;
@@ -78,7 +111,7 @@ export function ParticleWordmark() {
 
       const rect = container.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const width = rect.width;
+      const width = rect.width || window.innerWidth;
       const isMobile = width < 640;
       const height = isMobile ? 180 : Math.min(Math.max(width * 0.18, 140), 220);
 
@@ -92,7 +125,10 @@ export function ParticleWordmark() {
       offCanvas.width = canvas.width;
       offCanvas.height = canvas.height;
       const offCtx = offCanvas.getContext("2d", { willReadFrequently: true });
-      if (!offCtx) return;
+      if (!offCtx) {
+        onFail?.();
+        return;
+      }
 
       offCtx.scale(dpr, dpr);
 
@@ -174,6 +210,11 @@ export function ParticleWordmark() {
         }
       }
 
+      if (particles.length === 0) {
+        onFail?.();
+        return;
+      }
+
       // Check debug param
       if (typeof window !== "undefined" && window.location.search.includes("debug=particles")) {
         console.log(`[Particles Debug] Total particles sampled: ${particles.length}`);
@@ -184,7 +225,12 @@ export function ParticleWordmark() {
       assembleStart = performance.now();
       isSettled.current = false;
       renderFrame();
-      setHasDrawn(true);
+
+      firstFrameDrawnRef.current = true;
+      clearTimeout(failTimeout);
+      onFrameDrawn?.(particles.length);
+
+      setTimeout(() => onEntered?.(), assembleDuration);
     };
 
     const renderFrame = () => {
@@ -367,6 +413,7 @@ export function ParticleWordmark() {
     window.addEventListener("resize", handleResize);
 
     return () => {
+      clearTimeout(failTimeout);
       if (animFrameId.current) cancelAnimationFrame(animFrameId.current);
       themeObserver.disconnect();
       observer.disconnect();
@@ -374,27 +421,19 @@ export function ParticleWordmark() {
       canvas.removeEventListener("pointermove", handlePointerMove);
       canvas.removeEventListener("pointerleave", handlePointerLeave);
     };
-  }, [tier]);
+  }, [tier, onFail, onFrameDrawn, onEntered]);
+
+  const isExiting = phase === "exiting";
 
   return (
-    <div ref={containerRef} className="relative w-full overflow-hidden select-none">
-      {/* Real h1 stays in DOM; visually hidden once particle frame draws */}
-      <h1
-        className={`text-4xl sm:text-6xl lg:text-7xl font-extralight tracking-widest text-[var(--fg)] uppercase py-6 text-center transition-opacity duration-300 ${
-          hasDrawn ? "sr-only" : "opacity-100"
-        }`}
-      >
-        CHINEMEREM MADUEKE
-      </h1>
-
-      {/* Austensor-style Captions around hero */}
-      <div className="flex items-center justify-between py-2 border-b border-[var(--border)] mb-4 text-[11px] font-mono tracking-widest text-[var(--muted)] uppercase">
-        <span>Portfolio / 2026</span>
-        <span className="hidden sm:inline">Frontend &amp; Software</span>
-        <span>Lagos, Nigeria</span>
-      </div>
-
-      {/* Particle Canvas (aria-hidden) */}
+    <div
+      ref={containerRef}
+      className="relative w-full overflow-hidden select-none transition-all duration-600 ease-[cubic-bezier(0.22,1,0.36,1)]"
+      style={{
+        opacity: isExiting ? 0 : 1,
+        transform: isExiting ? "scale(0.98)" : "scale(1)",
+      }}
+    >
       <canvas
         ref={canvasRef}
         aria-hidden="true"

@@ -90,16 +90,29 @@ function writeConfigFile(overrides: Record<string, Partial<Project>>, version: n
   }
 }
 
-function getRedisClient(): Redis | null {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+export function getRedisConfig(): { url: string; token: string } | null {
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL ||
+    process.env.KV_REST_API_URL ||
+    process.env.UPSTASH_REDIS_URL ||
+    process.env.KV_URL;
 
-  if (!url || !token) {
-    return null;
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN ||
+    process.env.KV_REST_API_TOKEN;
+
+  if (url && token) {
+    return { url, token };
   }
+  return null;
+}
+
+function getRedisClient(): Redis | null {
+  const config = getRedisConfig();
+  if (!config) return null;
 
   try {
-    return new Redis({ url, token });
+    return new Redis({ url: config.url, token: config.token });
   } catch (err) {
     console.warn("[Store] Failed to initialize Redis client:", err);
     return null;

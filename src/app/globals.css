@@ -34,6 +34,20 @@ html[data-intro="skip"] #crack-open-intro {
   display: none !important;
 }
 
+/* Command menu trigger: full tier only */
+html:not([data-tier="full"]) #command-menu-trigger {
+  display: none !important;
+}
+
+/* Work section: on full tier, hide the SSR scroll-snap list before paint; on non-full tier, hide WebGL stage */
+html[data-tier="full"] #work-scroll-list {
+  display: none !important;
+}
+
+html:not([data-tier="full"]) #work-webgl-stage {
+  display: none !important;
+}
+
 @theme {
   --color-bg: var(--bg);
   --color-surface: var(--surface);

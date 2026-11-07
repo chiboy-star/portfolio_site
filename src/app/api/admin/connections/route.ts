@@ -5,10 +5,14 @@ export async function GET() {
   const username = process.env.GITHUB_USERNAME || process.env.ADMIN_GITHUB_LOGIN || "chiboy-star";
   const hasGithubToken = !!process.env.GITHUB_TOKEN;
   const hasVercelToken = !!process.env.VERCEL_TOKEN;
-  const hasRedis = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+  const hasRedis = !!(
+    (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) ||
+    (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
+  );
   const hasBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
   const hasAuth = !!(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET);
   const storeBackend = getStoreBackend();
+  const isProd = process.env.NODE_ENV === "production";
 
   return NextResponse.json({
     github: {
@@ -29,9 +33,11 @@ export async function GET() {
     redis: {
       connected: hasRedis,
       storeType: storeBackend,
-      missingVar: hasRedis ? undefined : "UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN",
+      missingVar: hasRedis ? undefined : "UPSTASH_REDIS_REST_URL (or KV_REST_API_URL)",
       message: hasRedis
         ? `Connected to Upstash Redis (serverless KV)`
+        : isProd
+        ? `CRITICAL: Changes will not be saved. Missing UPSTASH_REDIS_REST_URL or KV_REST_API_URL on Vercel read-only filesystem.`
         : `Missing Upstash credentials. Using file persistence: data/projects.config.json`,
     },
     blob: {

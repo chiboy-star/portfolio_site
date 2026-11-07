@@ -12,8 +12,8 @@ const CarouselWebGL = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[60vh] w-full flex items-center justify-center">
-        <div className="h-10 w-10 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+      <div className="h-[68vh] min-h-[460px] max-h-[640px] w-full flex items-center justify-center">
+        <div className="h-8 w-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
       </div>
     ),
   }
@@ -28,7 +28,12 @@ export function WorkSection({ initialProjects }: WorkSectionProps) {
   const [selectedProject, setSelectedProject] = React.useState<Project | null>(null);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [activeIndex, setActiveIndex] = React.useState(0);
+  const [mounted, setMounted] = React.useState(false);
   const tier = useTier();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Filter projects: "featured" shows only featured projects; "all" shows all visible projects
   const displayedProjects = React.useMemo(() => {
@@ -79,113 +84,139 @@ export function WorkSection({ initialProjects }: WorkSectionProps) {
         </h2>
       </div>
 
-      {/* Full Tier: Continuous WebGL Curved Carousel running Edge-to-Edge */}
-      {tier === "full" ? (
-        <div className="w-full relative">
+      {/* 
+        Full Tier Stage Container:
+        CSS `html:not([data-tier="full"]) #work-webgl-stage { display: none !important; }`
+        guarantees it stays hidden on lite/minimal before paint with no flash.
+      */}
+      <div id="work-webgl-stage" className="w-full relative">
+        {mounted && tier === "full" ? (
           <CarouselWebGL
             projects={displayedProjects}
             onSelectProject={openProjectModal}
             activeIndex={activeIndex}
             setActiveIndex={setActiveIndex}
           />
-
-          {/* Minimal Bottom Chrome: Featured/All Switch bottom-left, Counter bottom-right */}
-          <div className="mx-auto max-w-[1120px] px-4 sm:px-6 lg:px-8 flex items-center justify-between pt-6">
+        ) : (
+          <div
+            aria-hidden="true"
+            className="relative h-[68vh] min-h-[460px] max-h-[640px] w-full overflow-hidden flex items-center justify-center bg-[var(--surface)]/20"
+          >
+            {/* Perspective Grid Floor placeholder */}
             <div
-              role="radiogroup"
-              aria-label="Filter projects view"
-              className="inline-flex h-9 p-1 items-center rounded-[var(--radius-pill)] border border-[var(--border)] bg-[var(--surface)] select-none"
-            >
-              <button
-                role="radio"
-                aria-checked={filter === "featured"}
-                onClick={() => setFilter("featured")}
-                type="button"
-                className={`px-4 py-1 rounded-[var(--radius-pill)] text-xs font-medium transition-all ${
-                  filter === "featured"
-                    ? "bg-[var(--accent)] text-[var(--accent-fg)] font-semibold shadow-xs"
-                    : "text-[var(--muted)] hover:text-[var(--fg)]"
-                }`}
-              >
-                Featured
-              </button>
-              <button
-                role="radio"
-                aria-checked={filter === "all"}
-                onClick={() => setFilter("all")}
-                type="button"
-                className={`px-4 py-1 rounded-[var(--radius-pill)] text-xs font-medium transition-all ${
-                  filter === "all"
-                    ? "bg-[var(--accent)] text-[var(--accent-fg)] font-semibold shadow-xs"
-                    : "text-[var(--muted)] hover:text-[var(--fg)]"
-                }`}
-              >
-                All ({initialProjects.length})
-              </button>
-            </div>
+              className="pointer-events-none absolute bottom-4 left-0 right-0 h-28 opacity-15"
+              style={{
+                backgroundImage:
+                  "linear-gradient(to right, var(--border) 1px, transparent 1px), linear-gradient(to bottom, var(--border) 1px, transparent 1px)",
+                backgroundSize: "36px 36px",
+                transform: "perspective(300px) rotateX(60deg)",
+                transformOrigin: "bottom center",
+              }}
+            />
+          </div>
+        )}
 
-            {/* Small Counter bottom-right */}
-            <div className="caption-mono text-xs text-[var(--muted)] font-mono">
-              <span className="text-[var(--fg)] font-semibold">
-                {String(activeIndex + 1).padStart(2, "0")}
-              </span>{" "}
-              / {String(displayedProjects.length).padStart(2, "0")}
-            </div>
+        {/* Minimal Bottom Chrome: Featured/All Switch bottom-left, Counter bottom-right */}
+        <div className="mx-auto max-w-[1120px] px-4 sm:px-6 lg:px-8 flex items-center justify-between pt-6">
+          <div
+            role="radiogroup"
+            aria-label="Filter projects view"
+            className="inline-flex h-9 p-1 items-center rounded-[var(--radius-pill)] border border-[var(--border)] bg-[var(--surface)] select-none"
+          >
+            <button
+              role="radio"
+              aria-checked={filter === "featured"}
+              onClick={() => setFilter("featured")}
+              type="button"
+              className={`px-4 py-1 rounded-[var(--radius-pill)] text-xs font-medium transition-all cursor-pointer ${
+                filter === "featured"
+                  ? "bg-[var(--accent)] text-[var(--accent-fg)] font-semibold shadow-xs"
+                  : "text-[var(--muted)] hover:text-[var(--fg)]"
+              }`}
+            >
+              Featured
+            </button>
+            <button
+              role="radio"
+              aria-checked={filter === "all"}
+              onClick={() => setFilter("all")}
+              type="button"
+              className={`px-4 py-1 rounded-[var(--radius-pill)] text-xs font-medium transition-all cursor-pointer ${
+                filter === "all"
+                  ? "bg-[var(--accent)] text-[var(--accent-fg)] font-semibold shadow-xs"
+                  : "text-[var(--muted)] hover:text-[var(--fg)]"
+              }`}
+            >
+              All ({initialProjects.length})
+            </button>
+          </div>
+
+          {/* Small Counter bottom-right */}
+          <div className="caption-mono text-xs text-[var(--muted)] font-mono">
+            <span className="text-[var(--fg)] font-semibold">
+              {String(activeIndex + 1).padStart(2, "0")}
+            </span>{" "}
+            / {String(displayedProjects.length).padStart(2, "0")}
           </div>
         </div>
-      ) : (
-        /* Lite / Minimal / Mobile Tier: Smooth Scroll-snap list */
-        <div className="mx-auto max-w-[1120px] px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory focus-visible:outline-none scrollbar-none">
-            {displayedProjects.map((project) => (
-              <div
-                key={project.id}
-                className="w-[280px] sm:w-[320px] shrink-0 snap-center"
-              >
-                <ProjectCard
-                  project={project}
-                  onClick={() => openProjectModal(project)}
-                />
-              </div>
-            ))}
-          </div>
+      </div>
 
-          <div className="mt-4">
+      {/* 
+        Lite / Minimal / Mobile Tier: Smooth Scroll-snap list.
+        Always SSR-rendered for SEO and fast non-JS first paint.
+        CSS `html[data-tier="full"] #work-scroll-list { display: none !important; }`
+        instantly hides it before paint on full tier without hydration mismatch.
+      */}
+      <div id="work-scroll-list" className="mx-auto max-w-[1120px] px-4 sm:px-6 lg:px-8">
+        <div className="flex gap-6 overflow-x-auto pb-6 snap-x snap-mandatory focus-visible:outline-none scrollbar-none">
+          {displayedProjects.map((project) => (
             <div
-              role="radiogroup"
-              aria-label="Filter projects view"
-              className="inline-flex h-9 p-1 items-center rounded-[var(--radius-pill)] border border-[var(--border)] bg-[var(--surface)] select-none"
+              key={project.id}
+              className="w-[280px] sm:w-[320px] shrink-0 snap-center"
             >
-              <button
-                role="radio"
-                aria-checked={filter === "featured"}
-                onClick={() => setFilter("featured")}
-                type="button"
-                className={`px-4 py-1 rounded-[var(--radius-pill)] text-xs font-medium transition-all ${
-                  filter === "featured"
-                    ? "bg-[var(--accent)] text-[var(--accent-fg)] font-semibold shadow-xs"
-                    : "text-[var(--muted)] hover:text-[var(--fg)]"
-                }`}
-              >
-                Featured
-              </button>
-              <button
-                role="radio"
-                aria-checked={filter === "all"}
-                onClick={() => setFilter("all")}
-                type="button"
-                className={`px-4 py-1 rounded-[var(--radius-pill)] text-xs font-medium transition-all ${
-                  filter === "all"
-                    ? "bg-[var(--accent)] text-[var(--accent-fg)] font-semibold shadow-xs"
-                    : "text-[var(--muted)] hover:text-[var(--fg)]"
-                }`}
-              >
-                All ({initialProjects.length})
-              </button>
+              <ProjectCard
+                project={project}
+                onClick={() => openProjectModal(project)}
+              />
             </div>
+          ))}
+        </div>
+
+        <div className="mt-4">
+          <div
+            role="radiogroup"
+            aria-label="Filter projects view"
+            className="inline-flex h-9 p-1 items-center rounded-[var(--radius-pill)] border border-[var(--border)] bg-[var(--surface)] select-none"
+          >
+            <button
+              role="radio"
+              aria-checked={filter === "featured"}
+              onClick={() => setFilter("featured")}
+              type="button"
+              className={`px-4 py-1 rounded-[var(--radius-pill)] text-xs font-medium transition-all cursor-pointer ${
+                filter === "featured"
+                  ? "bg-[var(--accent)] text-[var(--accent-fg)] font-semibold shadow-xs"
+                  : "text-[var(--muted)] hover:text-[var(--fg)]"
+              }`}
+            >
+              Featured
+            </button>
+            <button
+              role="radio"
+              aria-checked={filter === "all"}
+              onClick={() => setFilter("all")}
+              type="button"
+              className={`px-4 py-1 rounded-[var(--radius-pill)] text-xs font-medium transition-all cursor-pointer ${
+                filter === "all"
+                  ? "bg-[var(--accent)] text-[var(--accent-fg)] font-semibold shadow-xs"
+                  : "text-[var(--muted)] hover:text-[var(--fg)]"
+              }`}
+            >
+              All ({initialProjects.length})
+            </button>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Detail Sheet (Desktop) / Drawer (Mobile) */}
       <ProjectDetailModal

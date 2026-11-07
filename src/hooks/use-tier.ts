@@ -1,57 +1,59 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 export type DeviceTier = "full" | "lite" | "minimal";
 
-export function useTier(): DeviceTier {
-  const [tier, setTier] = useState<DeviceTier>(() => {
-    if (typeof document !== "undefined") {
-      const docTier = document.documentElement.getAttribute("data-tier") as DeviceTier | null;
-      if (docTier === "full" || docTier === "lite" || docTier === "minimal") {
-        return docTier;
-      }
-    }
-    return "lite";
-  });
-
-  useEffect(() => {
-    const docTier = document.documentElement.getAttribute("data-tier") as DeviceTier | null;
-    if (docTier && (docTier === "full" || docTier === "lite" || docTier === "minimal")) {
-      setTier(docTier);
-    } else {
-      const rm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      // @ts-expect-error navigator.connection is non-standard
-      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-      const sd = conn && (conn.saveData || conn.effectiveType === "2g" || conn.effectiveType === "3g");
-      if (rm || sd) {
-        setTier("minimal");
-        document.documentElement.setAttribute("data-tier", "minimal");
-        return;
-      }
-      const finePointer = window.matchMedia("(pointer: fine)").matches;
-      const hover = window.matchMedia("(hover: hover)").matches;
-      const wide = window.innerWidth >= 1024;
-      const detected = finePointer && hover && wide ? "full" : "lite";
-      setTier(detected);
-      document.documentElement.setAttribute("data-tier", detected);
-    }
-
-    const handleResize = () => {
-      const current = document.documentElement.getAttribute("data-tier");
-      if (current === "minimal") return;
-      const finePointer = window.matchMedia("(pointer: fine)").matches;
-      const hover = window.matchMedia("(hover: hover)").matches;
-      const wide = window.innerWidth >= 1024;
-      const nextTier = finePointer && hover && wide ? "full" : "lite";
-      document.documentElement.setAttribute("data-tier", nextTier);
-      setTier(nextTier);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  return tier;
+function getClientSnapshot(): DeviceTier {
+  if (typeof document === "undefined") return "lite";
+  let tier = document.documentElement.getAttribute("data-tier") as DeviceTier | null;
+  if (!tier && typeof window !== "undefined") {
+    // @ts-expect-error global page tier cache
+    tier = (window.__PAGE_TIER as DeviceTier) || "lite";
+    document.documentElement.setAttribute("data-tier", tier);
+  }
+  if (tier === "full" || tier === "lite" || tier === "minimal") {
+    return tier;
+  }
+  return "lite";
 }
 
+function getServerSnapshot(): DeviceTier {
+  return "lite";
+}
+
+function subscribe(onStoreChange: () => void): () => void {
+  if (typeof MutationObserver === "undefined") return () => {};
+
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      if (m.attributeName === "data-tier") {
+        const val = document.documentElement.getAttribute("data-tier");
+        if (!val && typeof window !== "undefined") {
+          // Re-assert tier if an external re-render stripped attribute
+          // @ts-expect-error global page tier cache
+          const cached = (window.__PAGE_TIER as DeviceTier) || "lite";
+          document.documentElement.setAttribute("data-tier", cached);
+        }
+        onStoreChange();
+      }
+    }
+  });
+
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-tier"],
+  });
+
+  return () => observer.disconnect();
+}
+
+/**
+ * useTier hook backed by useSyncExternalStore.
+ * The server snapshot is permanently fixed to "lite".
+ * The client snapshot is safely read from document.documentElement data-tier.
+ * No document/window reads occur during pure render without subscription.
+ */
+export function useTier(): DeviceTier {
+  return useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
+}

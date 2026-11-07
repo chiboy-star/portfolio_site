@@ -383,12 +383,24 @@ export default function AdminPage() {
               </div>
 
               {/* Storage */}
-              <div className="p-3 rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--bg)]/50">
+              <div
+                className={`p-3 rounded-[var(--radius-control)] border ${
+                  connections.redis?.connected
+                    ? "border-[var(--border)] bg-[var(--bg)]/50"
+                    : "border-amber-500/40 bg-amber-500/5"
+                }`}
+              >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-semibold">Data Store</span>
-                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
-                    <CheckCircle2 className="h-3 w-3" /> {connections.redis?.storeType === "redis" ? "REDIS" : "FILE FALLBACK"}
-                  </span>
+                  {connections.redis?.connected ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-mono">
+                      <CheckCircle2 className="h-3 w-3" /> REDIS (KV)
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-mono">
+                      <AlertCircle className="h-3 w-3" /> FILE (READ-ONLY IN PROD)
+                    </span>
+                  )}
                 </div>
                 <p className="text-[11px] text-[var(--muted)] leading-tight">{connections.redis?.message}</p>
               </div>
