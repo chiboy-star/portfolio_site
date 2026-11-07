@@ -1,10 +1,14 @@
 {
-  "version": 1,
+  "version": 2,
   "overrides": {
     "manual:caskayd-sprint": {
       "title": "Influencer Marketing Web-App",
       "description": "Serving as Front-end Lead for this platform connecting brands with creators. Built dynamic dashboards and seamless user flows.",
-      "tags": ["Next.js", "Tailwind CSS", "React"],
+      "tags": [
+        "Next.js",
+        "Tailwind CSS",
+        "React"
+      ],
       "liveUrl": "https://caskayd-sprint-frontend.vercel.app",
       "visible": true,
       "featured": true,
@@ -14,9 +18,13 @@
     "gh:chiboy-star/calculator-project": {
       "title": "Smart Calculator",
       "description": "A modern, glassmorphism-styled calculator featuring custom logic for rapid thousands (K) and millions (M) multiplier inputs.",
-      "tags": ["JavaScript", "HTML5", "CSS3"],
+      "tags": [
+        "JavaScript",
+        "HTML5",
+        "CSS3"
+      ],
       "repoUrl": "https://github.com/chiboy-star/calculator-project",
-      "visible": true,
+      "visible": false,
       "featured": true,
       "order": 1,
       "source": "github"
@@ -24,13 +32,422 @@
     "gh:chiboy-star/password_generator": {
       "title": "Secure Password Generator",
       "description": "A cryptographically secure password generation tool with a responsive UI, utilizing window.crypto for true randomness.",
-      "tags": ["JavaScript", "Web Crypto", "CSS3"],
+      "tags": [
+        "JavaScript",
+        "Web Crypto",
+        "CSS3"
+      ],
       "repoUrl": "https://github.com/chiboy-star/password_generator",
-      "visible": true,
+      "visible": false,
       "featured": true,
       "order": 2,
+      "source": "github"
+    },
+    "gh:chiboy-star/Hotel_Demo": {
+      "title": "Hotel Demo",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/Hotel_Demo",
+      "visible": true,
+      "featured": false,
+      "order": 3,
+      "source": "github"
+    },
+    "gh:chiboy-star/EdgeScout": {
+      "title": "EdgeScout",
+      "description": "Quantitative Football Price-Discipline & Bet-Tracking Workbench",
+      "tags": [
+        "Python"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/EdgeScout",
+      "visible": false,
+      "featured": false,
+      "order": 4,
+      "source": "github"
+    },
+    "gh:chiboy-star/trading-bot": {
+      "title": "Trading Bot",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/trading-bot",
+      "visible": false,
+      "featured": false,
+      "order": 5,
+      "source": "github"
+    },
+    "gh:chiboy-star/Restaurant-Demo": {
+      "title": "Restaurant Demo",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/Restaurant-Demo",
+      "liveUrl": "https://restaurant-demo-mu-bice.vercel.app",
+      "visible": true,
+      "featured": false,
+      "order": 6,
+      "source": "github"
+    },
+    "gh:chiboy-star/Demo-site": {
+      "title": "Demo Site",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/Demo-site",
+      "liveUrl": "https://demo-site-lyart-five.vercel.app",
+      "visible": true,
+      "featured": false,
+      "order": 7,
+      "source": "github"
+    },
+    "gh:chiboy-star/Chinemerem_Madueke_0228_Operating_System": {
+      "title": "Chinemerem Madueke 0228 Operating System",
+      "description": "This a repo for all the code both class and personal for the operating systems course.",
+      "tags": [
+        "Rust"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/Chinemerem_Madueke_0228_Operating_System",
+      "visible": false,
+      "featured": false,
+      "order": 8,
+      "source": "github"
+    },
+    "gh:chiboy-star/Ordering-Frontend": {
+      "title": "Ordering Frontend",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/Ordering-Frontend",
+      "liveUrl": "https://ordering-frontend-sigma.vercel.app",
+      "visible": false,
+      "featured": false,
+      "order": 9,
+      "source": "github"
+    },
+    "gh:chiboy-star/Ordering-Backend": {
+      "title": "Ordering Backend",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/Ordering-Backend",
+      "visible": false,
+      "featured": false,
+      "order": 10,
+      "source": "github"
+    },
+    "gh:chiboy-star/Kobo": {
+      "title": "Kobo",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "Rust"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/Kobo",
+      "visible": false,
+      "featured": false,
+      "order": 11,
+      "source": "github"
+    },
+    "gh:chiboy-star/CaskaydDb": {
+      "title": "CaskaydDb",
+      "description": "This was built to use and feed the database for caskayd ",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/CaskaydDb",
+      "liveUrl": "https://caskayd-db.vercel.app",
+      "visible": false,
+      "featured": false,
+      "order": 12,
+      "source": "github"
+    },
+    "gh:chiboy-star/finance-pwa": {
+      "title": "Finance Pwa",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/finance-pwa",
+      "liveUrl": "https://finance-pwa-ten.vercel.app",
+      "visible": true,
+      "featured": false,
+      "order": 13,
+      "source": "github"
+    },
+    "gh:chiboy-star/habit-tracker": {
+      "title": "Habit Tracker",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/habit-tracker",
+      "liveUrl": "https://habit-tracker-omega-lime-81.vercel.app",
+      "visible": true,
+      "featured": false,
+      "order": 14,
+      "source": "github"
+    },
+    "gh:chiboy-star/event-booking-system-GROUP_5-": {
+      "title": "Event Booking System GROUP 5 ",
+      "description": "A full-stack web application designed to streamline the creation, discovery, and management of events.",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/event-booking-system-GROUP_5-",
+      "liveUrl": "https://event-booking-system-group-5.vercel.app",
+      "visible": true,
+      "featured": false,
+      "order": 15,
+      "source": "github"
+    },
+    "gh:chiboy-star/Pipeline": {
+      "title": "Pipeline",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "JavaScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/Pipeline",
+      "visible": false,
+      "featured": false,
+      "order": 16,
+      "source": "github"
+    },
+    "gh:chiboy-star/opengl-tesseract-scene": {
+      "title": "Opengl Tesseract Scene",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "C++"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/opengl-tesseract-scene",
+      "visible": false,
+      "featured": false,
+      "order": 17,
+      "source": "github"
+    },
+    "gh:chiboy-star/life-care-clinic.": {
+      "title": "Life Care Clinic.",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/life-care-clinic.",
+      "liveUrl": "https://life-care-clinic-tau.vercel.app",
+      "visible": true,
+      "featured": false,
+      "order": 18,
+      "source": "github"
+    },
+    "gh:chiboy-star/pyramid": {
+      "title": "Pyramid",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "C++"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/pyramid",
+      "visible": false,
+      "featured": false,
+      "order": 19,
+      "source": "github"
+    },
+    "gh:chiboy-star/Computer_Graphics_Assignment": {
+      "title": "Computer Graphics Assignment",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "C"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/Computer_Graphics_Assignment",
+      "visible": false,
+      "featured": false,
+      "order": 20,
+      "source": "github"
+    },
+    "gh:chiboy-star/ChinemereMaduekeComputerGraphics": {
+      "title": "ChinemereMaduekeComputerGraphics",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "C"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/ChinemereMaduekeComputerGraphics",
+      "visible": false,
+      "featured": false,
+      "order": 21,
+      "source": "github"
+    },
+    "gh:chiboy-star/COS-202_computer-programming-II-JavaScript-": {
+      "title": "COS 202 Computer Programming II JavaScript ",
+      "description": "This Repo contains the content of what i have learnt from class and self learning from the language: JavaScript",
+      "tags": [
+        "JavaScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/COS-202_computer-programming-II-JavaScript-",
+      "visible": false,
+      "featured": false,
+      "order": 22,
+      "source": "github"
+    },
+    "gh:chiboy-star/YT_Backend": {
+      "title": "YT Backend",
+      "description": "This was built using ai",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/YT_Backend",
+      "visible": false,
+      "featured": false,
+      "order": 23,
+      "source": "github"
+    },
+    "gh:chiboy-star/YT_Frontend": {
+      "title": "YT Frontend",
+      "description": "This was made using ai",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/YT_Frontend",
+      "visible": false,
+      "featured": false,
+      "order": 24,
+      "source": "github"
+    },
+    "gh:chiboy-star/portfolio_site": {
+      "title": "Portfolio Site",
+      "description": "This my portfolio site",
+      "tags": [
+        "Astro"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/portfolio_site",
+      "liveUrl": "https://portfolio-site-dun-nu.vercel.app",
+      "visible": false,
+      "featured": false,
+      "order": 25,
+      "source": "github"
+    },
+    "gh:chiboy-star/PAU_RustFiles-100L": {
+      "title": "PAU RustFiles 100L",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "Makefile"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/PAU_RustFiles-100L",
+      "visible": false,
+      "featured": false,
+      "order": 26,
+      "source": "github"
+    },
+    "gh:chiboy-star/freecodecamp_learn_javascript": {
+      "title": "Freecodecamp Learn Javascript",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "JavaScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/freecodecamp_learn_javascript",
+      "visible": false,
+      "featured": false,
+      "order": 27,
+      "source": "github"
+    },
+    "gh:chiboy-star/Test": {
+      "title": "Test",
+      "description": "testing the frontend ",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/Test",
+      "liveUrl": "https://test-eta-silk.vercel.app",
+      "visible": false,
+      "featured": false,
+      "order": 28,
+      "source": "github"
+    },
+    "gh:chiboy-star/W3schools-html": {
+      "title": "W3schools Html",
+      "description": "learning html from w3schools website",
+      "tags": [
+        "HTML"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/W3schools-html",
+      "visible": false,
+      "featured": false,
+      "order": 29,
+      "source": "github"
+    },
+    "gh:chiboy-star/ice-block-tracker": {
+      "title": "Ice Block Tracker",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/ice-block-tracker",
+      "visible": false,
+      "featured": false,
+      "order": 30,
+      "source": "github"
+    },
+    "gh:chiboy-star/PAU_Cpp_Files-200L": {
+      "title": "PAU Cpp Files 200L",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "C++"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/PAU_Cpp_Files-200L",
+      "visible": false,
+      "featured": false,
+      "order": 31,
+      "source": "github"
+    },
+    "gh:chiboy-star/Learn_Cpp": {
+      "title": "Learn Cpp",
+      "description": "This is a repo am using to learn c++",
+      "tags": [
+        "C++"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/Learn_Cpp",
+      "visible": false,
+      "featured": false,
+      "order": 32,
+      "source": "github"
+    },
+    "gh:chiboy-star/Learn-React": {
+      "title": "Learn React",
+      "description": "This is repo where i put things i used while learning React",
+      "tags": [
+        "JavaScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/Learn-React",
+      "visible": false,
+      "featured": false,
+      "order": 33,
+      "source": "github"
+    },
+    "gh:chiboy-star/Learn-Next.js": {
+      "title": "Learn Next.Js",
+      "description": "This is i repo i put things i used while learning next.js ",
+      "tags": [
+        "TypeScript"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/Learn-Next.js",
+      "visible": false,
+      "featured": false,
+      "order": 34,
+      "source": "github"
+    },
+    "gh:chiboy-star/PAU_Python_files-100L": {
+      "title": "PAU Python Files 100L",
+      "description": "Project built by Chinemerem Madueke.",
+      "tags": [
+        "Jupyter Notebook"
+      ],
+      "repoUrl": "https://github.com/chiboy-star/PAU_Python_files-100L",
+      "visible": false,
+      "featured": false,
+      "order": 35,
       "source": "github"
     }
   }
 }
-
