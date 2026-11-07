@@ -5,7 +5,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { CommandMenu } from "@/components/command-menu";
 import { MobileMenu } from "@/components/mobile-menu";
-import { useTier } from "@/hooks/use-tier";
 import { Menu, FileDown, Command as CmdIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -13,7 +12,6 @@ export function Header() {
   const [activeSection, setActiveSection] = React.useState<string>("hero");
   const [commandOpen, setCommandOpen] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const tier = useTier();
 
   React.useEffect(() => {
     const sectionIds = ["hero", "work", "skills", "about", "contact"];
@@ -85,19 +83,17 @@ export function Header() {
 
           {/* Right Action Cluster */}
           <div className="flex items-center gap-3">
-            {/* Command Menu Chip - Full tier / fine pointer only */}
-            {tier === "full" && (
-              <button
-                id="command-menu-trigger"
-                onClick={() => setCommandOpen(true)}
-                type="button"
-                aria-label="Search and command palette (⌘K)"
-                className="hidden lg:flex items-center gap-2 h-8 px-2.5 rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--fg)] transition-all select-none"
-              >
-                <CmdIcon className="h-3.5 w-3.5 text-[var(--accent)]" />
-                <span className="font-mono text-[11px] tracking-wider">⌘K</span>
-              </button>
-            )}
+            {/* Command Menu Chip - Always in DOM for hydration parity; hidden by CSS on non-full tier */}
+            <button
+              id="command-menu-trigger"
+              onClick={() => setCommandOpen(true)}
+              type="button"
+              aria-label="Search and command palette (⌘K)"
+              className="hidden lg:flex items-center gap-2 h-8 px-2.5 rounded-[var(--radius-control)] border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--fg)] transition-all select-none"
+            >
+              <CmdIcon className="h-3.5 w-3.5 text-[var(--accent)]" />
+              <span className="font-mono text-[11px] tracking-wider">⌘K</span>
+            </button>
 
             {/* Theme Toggle Pill */}
             <ThemeToggle />

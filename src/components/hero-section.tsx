@@ -1,27 +1,11 @@
 "use client";
 
 import * as React from "react";
-import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { SiGithub, SiLinkedin } from "@icons-pack/react-simple-icons";
 import { FileDown, Mail } from "lucide-react";
-import { useTier } from "@/hooks/use-tier";
-
 import { CrackOpenIntro } from "@/components/crack-open-intro";
-
-const ParticleWordmark = dynamic(
-  () => import("@/components/particle-wordmark").then((mod) => mod.ParticleWordmark),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-full py-8 text-center">
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extralight tracking-widest text-[var(--fg)] uppercase">
-          CHINEMEREM MADUEKE
-        </h1>
-      </div>
-    ),
-  }
-);
+import { RotatingHeroName } from "@/components/name-styles/rotating-hero-name";
 
 interface HeroSectionProps {
   headline?: string;
@@ -30,43 +14,41 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({
-  headline = "Junior Frontend Developer. Open to internships.",
+  headline = "Junior Frontend Developer.",
   bio = "I'm a second-year Software Engineering student at Pan-Atlantic University with a strong foundation in front-end development. I specialize in building responsive, API-driven web applications using JavaScript, React, and Next.js, with ambitions in back-end development and cybersecurity.",
   status = "Open to internships",
 }: HeroSectionProps) {
-  const tier = useTier();
+  // Ensure repeated status is cleanly dropped from headline
+  const cleanHeadline = headline
+    .replace(/\.?\s*Open to internships\.?/i, "")
+    .trim()
+    .replace(/\.*$/, ".");
 
   return (
     <section id="hero" className="relative mx-auto max-w-[1120px] px-4 pt-8 pb-16 sm:px-6 lg:px-8">
       {/* Crack-open Intro: Server-rendered, visible on first paint unless skipped */}
       <CrackOpenIntro />
 
-      {/* Particle Wordmark or Static Typography Fallback */}
-      {tier === "full" ? (
-        <ParticleWordmark />
-      ) : (
-        <div className="w-full select-none">
-          <div className="flex items-center justify-between py-2 border-b border-[var(--border)] mb-4 text-[11px] font-mono tracking-widest text-[var(--muted)] uppercase">
-            <span>Portfolio / 2026</span>
-            <span className="hidden sm:inline">Frontend &amp; Software</span>
-            <span>Lagos, Nigeria</span>
-          </div>
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extralight tracking-widest text-[var(--fg)] uppercase py-6 text-center">
-            CHINEMEREM MADUEKE
-          </h1>
-        </div>
-      )}
+      {/* Austensor-style Captions Bar */}
+      <div className="flex items-center justify-between py-2 border-b border-[var(--border)] mb-2 text-[11px] font-mono tracking-widest text-[var(--muted)] uppercase select-none">
+        <span>Portfolio / 2026</span>
+        <span className="hidden sm:inline">Frontend &amp; Software</span>
+        <span>Lagos, Nigeria</span>
+      </div>
+
+      {/* Rotating Name Styles (Guaranteed fallback, zero hydration mismatch, rotating presentations) */}
+      <RotatingHeroName />
 
       {/* Role and Bio */}
       <div className="mt-8 max-w-2xl">
-        {/* Status Line with Static Dot */}
-        <div className="inline-flex items-center gap-2 mb-4 rounded-[var(--radius-pill)] border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs text-[var(--muted)]">
+        {/* Status Line with Static Dot: plain text line, no border, no background, no animation */}
+        <div className="flex items-center gap-2 mb-4 text-xs font-mono uppercase tracking-wider text-[var(--muted)] select-none">
           <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
-          <span className="font-medium text-[var(--fg)]">{status}</span>
+          <span className="text-[var(--fg)]">{status}</span>
         </div>
 
         <p className="text-xl sm:text-2xl font-light text-[var(--fg)] tracking-tight mb-4">
-          {headline}
+          {cleanHeadline}
         </p>
 
         <p className="text-sm sm:text-base text-[var(--muted)] leading-relaxed">
@@ -98,7 +80,6 @@ export function HeroSection({
               href="https://github.com/chiboy-star"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="GitHub Profile"
               className="gap-2"
             >
               <SiGithub className="h-4 w-4" />
@@ -116,7 +97,6 @@ export function HeroSection({
               href="https://www.linkedin.com/in/chinemerem-madueke-b75038294"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="LinkedIn Profile"
               className="gap-2"
             >
               <SiLinkedin className="h-4 w-4" />
@@ -126,18 +106,13 @@ export function HeroSection({
 
           <Button
             asChild
-            variant="outline"
+            variant="ghost"
             size="lg"
-            className="rounded-[var(--radius-control)] border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            className="rounded-[var(--radius-control)] text-[var(--muted)] hover:text-[var(--fg)]"
           >
-            <a
-              href="/cv.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="gap-2"
-            >
+            <a href="/cv.pdf" target="_blank" rel="noopener noreferrer" className="gap-2">
               <FileDown className="h-4 w-4 text-[var(--accent)]" />
-              <span>Download CV</span>
+              <span>Resume</span>
             </a>
           </Button>
         </div>
@@ -145,4 +120,3 @@ export function HeroSection({
     </section>
   );
 }
-

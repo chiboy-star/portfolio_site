@@ -53,9 +53,13 @@ GITHUB_TOKEN=                 # Fine-grained personal access token with public_r
 VERCEL_TOKEN=                 # Vercel Personal Access Token
 VERCEL_TEAM_ID=               # Optional (leave blank if personal account)
 
-# Upstash Redis
+# Upstash Redis / Vercel KV (Key-Value Store)
+# Supports either Upstash or Vercel KV environment variable pairs:
 UPSTASH_REDIS_REST_URL=       # From Upstash Console or Vercel Marketplace
 UPSTASH_REDIS_REST_TOKEN=     # From Upstash Console
+# OR:
+KV_REST_API_URL=              # From Vercel KV Dashboard
+KV_REST_API_TOKEN=            # From Vercel KV Dashboard
 
 # Vercel Blob Storage
 BLOB_READ_WRITE_TOKEN=        # From Vercel Project Storage
@@ -96,10 +100,97 @@ Access the management dashboard at `/admin`.
 - **Dark, Quiet, Typographic:** Geist font family with high-contrast neutral backgrounds (`#0A0A0B` dark, `#FAFAF7` light).
 - **One Accent:** Amber (`#F5A524` in dark, `#B45309` in light), used strictly for primary CTA, active navigation underline, and focus rings.
 - **Flat Surface Hierarchy:** Single surface cards without nested cards.
+- **Status & Clean Headline:** Replaced the previous bordered status badge with a quiet, unbordered mono label with a static green status dot. The hero headline is kept strictly distinct from the status line (`"Junior Frontend Developer."`), avoiding duplicate "open to internships" phrasing.
 - **Device Tiers:**
-  - **Full Tier (Desktop):** Crack-open canvas intro, interactive particle wordmark with rAF settle detection, 3D concave cylinder carousel.
-  - **Lite Tier (Mobile/Touch):** Native scroll-snap list, swipe-to-dismiss bottom drawers, static wordmark.
-  - **Minimal Tier (Reduced Motion / Data Saver):** Zero canvas animations, plain text typography, lightweight payload.
+  - **Minimal Tier:** Triggered when `prefers-reduced-motion: reduce` or `navigator.connection.saveData === true`. Zero canvas animations, plain text typography (`wide-thin` locked), lightweight payload.
+  - **Lite Tier (Mobile/Touch/Narrow):** Triggered when `(pointer: coarse)`, hover is unavailable, or viewport width is under 1024px. Native scroll-snap list, swipe-to-dismiss bottom drawers, rotating typographic wordmark.
+  - **Full Tier (Desktop):** Fine pointer, hover support, width >= 1024px. Crack-open canvas intro, interactive particle wordmark (~14,000–18,000 dots) or rotating typographic styles, 3D concave cylinder carousel.
+  - **Stability & Hydration Safety:** Volatile signals (`effectiveType`, `downlink`, `rtt`, `deviceMemory`, `hardwareConcurrency`) are completely excluded from tier determination. The tier is decided once per load by an inline pre-paint script. Server markup renders identical HTML across tiers, toggling visual layout strictly via CSS (`html[data-tier]`, `html[data-intro]`).
+  - **Testing Overrides & Dev Badge:** Append `?tier=full`, `?tier=lite`, or `?tier=minimal` to force a specific tier for that page load. In development mode, a small fixed corner badge (`bottom-3 right-3`) indicates the active tier without obscuring the Next.js dev tools indicator.
+
+---
+
+## 🎬 Crack-Open Intro Overlay (Homage to awards.racing)
+
+The opening banner is an ink/amber slab that cracks open in stepped square Chebyshev rings (pixel staircase):
+- **High-Contrast Theme Tokens:**
+  - **Light Theme:** Page `--bg` is `#FAFAF7`, slab `--intro-bg` is `#0A0A0B` (solid ink, 18.9:1 contrast), wordmark is off-white (`#EDEDEE`, 16.9:1 contrast) with amber initials (`#F5A524`).
+  - **Dark Theme:** Page `--bg` is `#0A0A0B`, slab `--intro-bg` is `#F5A524` (solid amber, 9.7:1 contrast), wordmark is ink (`#0A0A0B`, 9.7:1 contrast) with enlarged ink initials (`1.15em`).
+- **Typography & Baseline Alignment:** **Unbounded 900** uppercase, stacked on two lines ("CHINEMEREM" over "MADUEKE"), skewed `-10deg` (`transform: skewX(-10deg)`). Rendered as continuous single text runs per line (`<span class="initial">C</span>HINEMEREM` and `<span class="initial">M</span>ADUEKE`) with `display: inline`, `whitespace-nowrap`, and `vertical-align: 0.035em`, ensuring initials stay locked to the exact text baseline (measured baseline offset $\le 0.36\text{px}$) with zero wrapping or detachment.
+- **Sequence (<= 1.6s):**
+  - **0–400ms:** Solid slab and wordmark hold (wordmark scales 1.04 $\to$ 1.0).
+  - **400–1300ms:** Chebyshev distance rings expanding from center in 7 steps (90ms/step), creating a pixel staircase opening.
+  - **1300–1600ms:** Wordmark lifts -8vh and fades out; overlay is removed from the DOM.
+- **Session Rules & Replay:**
+  - Played once per session (sets `sessionStorage.introSeen = "true"` on completion).
+  - `?intro=1`: Forces replay on load regardless of session storage.
+  - `?intro=0`: Forces skip for automated testing or quick navigation.
+  - **Replay Intro Command:** Available in the Command Menu (`Ctrl+K` / `Cmd+K` $\to$ "Replay Intro", Full tier only). Replays the sequence in-memory via custom event without reloading the page.
+  - **Interplay with Hero Name:** Emits an `intro:done` event upon completion; the rotating hero name waits for this event before animating in so it never animates blindly behind the slab.
+
+---
+
+## 🔀 Rotating Hero Name & Typographic System (9 Modular Styles)
+
+The hero name features an orchestrated rotation system with 9 modular typographic display styles, self-hosted via `next/font/google` (`display: "swap"`, `preload: false`, on-demand transfer):
+
+1. **`wide-thin`**: **Syncopate (400)**. Wide caps, generous letter-spacing tracking. (Static lock for Minimal tier).
+2. **`heavy-stacked`**: **Unbounded (900)**. Stacked two-line skewed `-10deg` with amber accent initials.
+3. **`marker-scrawl`**: **Permanent Marker (400)**. Letters appear left to right with random $\pm 3^\circ$ tilt, followed by a dynamic SVG scribble underline drawn with `stroke-dashoffset`.
+4. **`slice`**: **Anton (400)**. Tall condensed caps cut into 3 horizontal bands with alternating clip-path translation.
+5. **`decode`**: **Major Mono Display (400)**. Scrambled matrix glyph decoding stream locking left to right.
+6. **`outline-fill`**: **Rubik Mono One (400)**. Outlined text-stroke typography filling with a gradient wipe from left to right.
+7. **`weight-sweep`**: **Fraunces (variable)**. Continuous sinusoidal font weight wave (100 $\to$ 900 $\to$ 400) sweeping across individual letters.
+8. **`soft-blur`**: **Instrument Serif (italic)**. Quiet, editorial italic serif resolving gently from `blur(8px)` and opacity 0.
+9. **`particles`**: **Syncopate sampling mask**. Interactive cursor-repelling canvas dot name (~14,000–18,000 dots, Full tier only, 2x selection weight). Computes exact width ratio via `(containerWidth * 0.8 / measuredWidthAt100) * 100` dynamically spanning 80%–87% of the viewport width with an automated fallback guard (`onFail`) if bounding width drops below 50%.
+
+### Selection & Rotation Lifecycle
+- **Initial Pick:** On page load, randomly selects a style different from the previous visit (`localStorage` key `last_name_style`). Minimal tier is hard-locked to `wide-thin`.
+- **Timer & Rotation:** Periodically transitions between styles every 30–60 seconds.
+- **Smart Pause Safeguards:** The rotation timer automatically pauses when:
+  - The tab is hidden or backgrounded (`document.visibilityState !== "visible"`).
+  - The hero is scrolled out of the viewport (`IntersectionObserver`).
+  - The user's pointer hovers over the hero name area.
+  - The crack-open intro is actively playing.
+- **Font Load Safeguard (1.5s Timeout):** Each style awaits its font (`waitForFont(...)`). If a font fails to load or times out after 1.5 seconds, it falls back cleanly to the Geist sans typography.
+- **Zero CLS:** The hero name container is height-locked (`h-[110px] sm:h-[140px] lg:h-[160px]`) with absolute positioning for decorative variations, guaranteeing zero Cumulative Layout Shift during transitions (measured CLS: 0.0003).
+
+---
+
+## 🔤 How to Add or Swap a Name Style Font
+
+1. **Declare the Google Font in [`src/lib/fonts.ts`](file:///c:/Users/chine/Downloads/portfolio_site/src/lib/fonts.ts):**
+   ```typescript
+   import { Your_Font } from "next/font/google";
+
+   export const fontYourFont = Your_Font({
+     weight: "400", // or ["400", "700"]
+     subsets: ["latin"],
+     display: "swap",
+     preload: false, // Ensures font is downloaded on-demand only when style renders
+     variable: "--font-your-font",
+   });
+   ```
+2. **Expose the CSS variable in [`src/app/layout.tsx`](file:///c:/Users/chine/Downloads/portfolio_site/src/app/layout.tsx):**
+   Add `${fontYourFont.variable}` to `<body>` className.
+3. **Register the style ID in [`src/components/name-styles/types.ts`](file:///c:/Users/chine/Downloads/portfolio_site/src/components/name-styles/types.ts)** and [`selector.ts`](file:///c:/Users/chine/Downloads/portfolio_site/src/components/name-styles/selector.ts).
+4. **Implement the style component:**
+   Use `waitForFont("Your Font", "400")` inside a `useEffect`, apply `fontFamily: "var(--font-your-font), sans-serif"`, and handle `phase: "entering" | "active" | "exiting"`.
+
+---
+
+## 🧪 Testing & Verification
+
+```bash
+# Run unit tests (testing name styles selection, pause guards, intro skip logic)
+npm test
+
+# Run Round 5 Playwright verification suite (intro text, baselines, bounding boxes, particle sizing, headline, clean status, CLS)
+node scripts/verify-round5.mjs
+
+# Run Dev Overlay & Console health check (verifying 0 errors / 0 warnings across all tiers)
+node scripts/test-dev-overlay.mjs
+```
 
 ---
 

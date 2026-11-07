@@ -2,37 +2,68 @@
 
 import * as React from "react";
 import { useTier } from "@/hooks/use-tier";
+import { fontSyncopate } from "@/lib/fonts";
+import { NameStyleProps } from "./name-styles/types";
 
 interface Particle {
   x: number;
   y: number;
-  originX: number;
-  originY: number;
   vx: number;
   vy: number;
+  originX: number;
+  originY: number;
   size: number;
-  type: "fg" | "accent" | "muted";
+  colorType: "fg" | "accent" | "muted";
 }
 
-export function ParticleWordmark() {
+interface ParticleWordmarkProps extends NameStyleProps {
+  onFail?: () => void;
+  onFrameDrawn?: (count: number) => void;
+}
+
+export function ParticleWordmark({
+  phase,
+  onEntered,
+  onExited,
+  onFail,
+  onFrameDrawn,
+}: ParticleWordmarkProps) {
   const tier = useTier();
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
-  const isInteracting = React.useRef(false);
-  const pointerPos = React.useRef({ x: -1000, y: -1000 });
+
   const animFrameId = React.useRef<number | null>(null);
-  const isSettled = React.useRef(false);
-  const isVisible = React.useRef(true);
-  const [hasDrawn, setHasDrawn] = React.useState(false);
-  const colorsRef = React.useRef({ fg: "#EDEDEE", accent: "#F5A524", muted: "#8D8D94" });
+  const isSettled = React.useRef<boolean>(false);
+  const isInteracting = React.useRef<boolean>(false);
+  const pointerPos = React.useRef<{ x: number; y: number }>({ x: -1000, y: -1000 });
+  const isVisible = React.useRef<boolean>(true);
+  const firstFrameDrawnRef = React.useRef<boolean>(false);
+
+  const colorsRef = React.useRef<{ fg: string; accent: string; muted: string }>({
+    fg: "#EDEDEE",
+    accent: "#F5A524",
+    muted: "#8D8D94",
+  });
 
   React.useEffect(() => {
+    if (tier === "minimal") return;
+
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      onFail?.();
+      return;
+    }
+
+    // 1.5-second timeout safeguard: if first particle frame does not draw, fail gracefully
+    const failTimeout = setTimeout(() => {
+      if (!firstFrameDrawnRef.current) {
+        onFail?.();
+      }
+    }, 1500);
 
     let particles: Particle[] = [];
     let isAssembling = true;
@@ -61,16 +92,10 @@ export function ParticleWordmark() {
     });
 
     const initParticles = async () => {
-      // 1. Wait for Geist font to be fully loaded
+      // 1. Ensure fonts are ready
       try {
         if ("fonts" in document) {
-          await Promise.race([
-            Promise.all([
-              document.fonts.load("500 200px Geist"),
-              document.fonts.ready,
-            ]),
-            new Promise((resolve) => setTimeout(resolve, 600)),
-          ]);
+          await document.fonts.ready;
         }
       } catch {
         // Fallback gracefully
@@ -78,7 +103,7 @@ export function ParticleWordmark() {
 
       const rect = container.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const width = rect.width;
+      const width = rect.width || window.innerWidth;
       const isMobile = width < 640;
       const height = isMobile ? 180 : Math.min(Math.max(width * 0.18, 140), 220);
 
@@ -92,30 +117,30 @@ export function ParticleWordmark() {
       offCanvas.width = canvas.width;
       offCanvas.height = canvas.height;
       const offCtx = offCanvas.getContext("2d", { willReadFrequently: true });
-      if (!offCtx) return;
+      if (!offCtx) {
+        onFail?.();
+        return;
+      }
 
       offCtx.scale(dpr, dpr);
 
-      // Fit text to ~80% container width
-      let fontSize = isMobile ? Math.floor(width * 0.12) : Math.floor(width * 0.065);
-      fontSize = Math.min(Math.max(fontSize, 24), 88);
+      // Measure text at 100px using valid CSS font family
+      const syncopateFamily = `${fontSyncopate.style.fontFamily}, "Syncopate", sans-serif`;
+      offCtx.font = `700 100px ${syncopateFamily}`;
+      const textToMeasure = isMobile ? "CHINEMEREM" : "CHINEMEREM MADUEKE";
+      const measuredWidthAt100 = offCtx.measureText(textToMeasure).width || 1400;
 
-      const computedFont =
-        getComputedStyle(container).fontFamily ||
-        "Geist, -apple-system, BlinkMacSystemFont, sans-serif";
-      offCtx.font = `500 ${fontSize}px ${computedFont}`;
+      // Formula from prompt: fontSize = containerWidth * 0.8 / measuredWidthAt100 * 100
+      let fontSize = (width * 0.8 / measuredWidthAt100) * 100;
+
+      // Capped so cap height does not exceed container height
+      const maxCapHeight = isMobile ? height * 0.42 : height * 0.58;
+      fontSize = Math.min(fontSize, maxCapHeight);
+
+      offCtx.font = `700 ${fontSize}px ${syncopateFamily}`;
       offCtx.fillStyle = "#ffffff";
       offCtx.textAlign = "center";
       offCtx.textBaseline = "middle";
-
-      // Measure and fit
-      const textToMeasure = isMobile ? "CHINEMEREM" : "CHINEMEREM MADUEKE";
-      const textWidth = offCtx.measureText(textToMeasure).width;
-      const targetWidth = width * 0.82;
-      if (textWidth > targetWidth && targetWidth > 0) {
-        fontSize = Math.floor(fontSize * (targetWidth / textWidth));
-        offCtx.font = `500 ${fontSize}px ${computedFont}`;
-      }
 
       if (isMobile) {
         offCtx.fillText("CHINEMEREM", width / 2, height * 0.35);
@@ -151,40 +176,59 @@ export function ParticleWordmark() {
             const homeX = posX + jitterX;
             const homeY = posY + jitterY;
 
-            // Roll particle color category: ~8% accent, ~5% muted, ~87% fg
-            const roll = Math.random();
-            const type = roll < 0.08 ? "accent" : roll < 0.13 ? "muted" : "fg";
-            const size = type === "accent" ? (Math.random() * 1.2 + 1.3) : (Math.random() * 1.0 + 1.0);
+            // Initial scatter position for assemble animation
+            const scatterRadius = Math.random() * 80 + 30;
+            const scatterAngle = Math.random() * Math.PI * 2;
+            const initX = homeX + Math.cos(scatterAngle) * scatterRadius;
+            const initY = homeY + Math.sin(scatterAngle) * scatterRadius;
 
-            // Initial scatter position for assembly animation
-            const scatterX = homeX + (Math.random() - 0.5) * width * 0.8;
-            const scatterY = homeY + (Math.random() - 0.5) * height * 0.8;
+            // 1 to 2.5px dots, ~8% accent, ~5% muted
+            const rand = Math.random();
+            const colorType: "fg" | "accent" | "muted" =
+              rand < 0.08 ? "accent" : rand < 0.13 ? "muted" : "fg";
+            const size =
+              colorType === "accent"
+                ? Math.random() * 1.2 + 1.4 // 1.4 to 2.6px
+                : Math.random() * 1.0 + 1.0; // 1.0 to 2.0px
 
             particles.push({
-              x: scatterX,
-              y: scatterY,
-              originX: homeX,
-              originY: homeY,
+              x: initX,
+              y: initY,
               vx: 0,
               vy: 0,
+              originX: homeX,
+              originY: homeY,
               size,
-              type,
+              colorType,
             });
           }
         }
       }
 
-      // Check debug param
-      if (typeof window !== "undefined" && window.location.search.includes("debug=particles")) {
+      const bboxWidth = maxX > minX ? maxX - minX : 0;
+      const ratio = width > 0 ? bboxWidth / width : 0;
+
+      if (window.location.search.includes("debug=particles")) {
         console.log(`[Particles Debug] Total particles sampled: ${particles.length}`);
-        console.log(`[Particles Debug] Bounding Box: x=[${minX.toFixed(1)}, ${maxX.toFixed(1)}], y=[${minY.toFixed(1)}, ${maxY.toFixed(1)}]`);
+        console.log(`[Particles Debug] Bounding Box: x=[${minX.toFixed(1)}, ${maxX.toFixed(1)}] (width=${bboxWidth.toFixed(1)}, ratio=${ratio.toFixed(3)}), y=[${minY.toFixed(1)}, ${maxY.toFixed(1)}]`);
       }
 
-      isAssembling = true;
+      // If the sampled bounding box is under 50% of the container width, treat as failed and fall back
+      if (ratio < 0.5 || particles.length < 500) {
+        onFail?.();
+        return;
+      }
+
       assembleStart = performance.now();
+      isAssembling = true;
       isSettled.current = false;
       renderFrame();
-      setHasDrawn(true);
+
+      firstFrameDrawnRef.current = true;
+      clearTimeout(failTimeout);
+      onFrameDrawn?.(particles.length);
+
+      setTimeout(() => onEntered?.(), assembleDuration);
     };
 
     const renderFrame = () => {
@@ -228,103 +272,93 @@ export function ParticleWordmark() {
           p.y = p.y + (p.originY - p.y) * (assembleEase * 0.15 + 0.05);
           totalKineticEnergy += 1;
         } else if (tier === "full") {
-          // Pointer repulsion
-          const dx = p.x - pointerPos.current.x;
-          const dy = p.y - pointerPos.current.y;
+          // Interactive repulsion
+          const dx = pointerPos.current.x - p.x;
+          const dy = pointerPos.current.y - p.y;
           const distSq = dx * dx + dy * dy;
 
           if (distSq < mouseRadiusSq && distSq > 0) {
             const dist = Math.sqrt(distSq);
-            const force = (1 - dist / mouseRadius) * 9;
-            p.vx += (dx / dist) * force;
-            p.vy += (dy / dist) * force;
+            const force = (1 - dist / mouseRadius) * 4.5;
+            p.vx -= (dx / dist) * force;
+            p.vy -= (dy / dist) * force;
           }
 
-          // Spring back to origin
-          const springX = (p.originX - p.x) * 0.085;
-          const springY = (p.originY - p.y) * 0.085;
-          p.vx = (p.vx + springX) * 0.78;
-          p.vy = (p.vy + springY) * 0.78;
+          // Spring return to home position (tension 0.07, damping 0.84)
+          const homeDx = p.originX - p.x;
+          const homeDy = p.originY - p.y;
+          p.vx = (p.vx + homeDx * 0.07) * 0.84;
+          p.vy = (p.vy + homeDy * 0.07) * 0.84;
 
           p.x += p.vx;
           p.y += p.vy;
 
-          const energy = Math.abs(p.vx) + Math.abs(p.vy);
-          totalKineticEnergy += energy;
+          totalKineticEnergy += Math.abs(p.vx) + Math.abs(p.vy) + Math.abs(homeDx) + Math.abs(homeDy);
         }
 
-        if (p.type === "accent") accentList.push(p);
-        else if (p.type === "muted") mutedList.push(p);
+        if (p.colorType === "accent") accentList.push(p);
+        else if (p.colorType === "muted") mutedList.push(p);
         else fgList.push(p);
       }
 
-      // Draw FG particles
-      ctx.fillStyle = fg;
-      ctx.beginPath();
-      for (let i = 0; i < fgList.length; i++) {
-        const p = fgList[i];
-        ctx.rect(p.x, p.y, p.size, p.size);
-      }
-      ctx.fill();
-
-      // Draw Accent particles
-      ctx.fillStyle = accent;
-      ctx.beginPath();
-      for (let i = 0; i < accentList.length; i++) {
-        const p = accentList[i];
-        ctx.rect(p.x, p.y, p.size, p.size);
-      }
-      ctx.fill();
-
-      // Draw Muted particles
-      ctx.fillStyle = muted;
-      ctx.beginPath();
-      for (let i = 0; i < mutedList.length; i++) {
-        const p = mutedList[i];
-        ctx.rect(p.x, p.y, p.size, p.size);
-      }
-      ctx.fill();
-
-      // Render 24px ring cursor with 1px accent border if fine pointer
-      if (tier === "full" && pointerPos.current.x > 0 && pointerPos.current.x < width) {
-        ctx.strokeStyle = accent;
-        ctx.lineWidth = 1;
+      // Draw FG dots
+      if (fgList.length > 0) {
+        ctx.fillStyle = fg;
         ctx.beginPath();
-        ctx.arc(pointerPos.current.x, pointerPos.current.y, 12, 0, Math.PI * 2);
-        ctx.stroke();
+        for (let i = 0; i < fgList.length; i++) {
+          const p = fgList[i];
+          ctx.moveTo(p.x + p.size / 2, p.y);
+          ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
+        }
+        ctx.fill();
       }
 
-      // Debug overlay if ?debug=particles
-      if (typeof window !== "undefined" && window.location.search.includes("debug=particles")) {
-        ctx.strokeStyle = "rgba(255, 0, 0, 0.4)";
-        ctx.strokeRect(10, 10, width - 20, height - 20);
-        ctx.fillStyle = "#F5A524";
-        ctx.font = "12px monospace";
-        ctx.fillText(`Particles: ${particles.length}`, 15, 25);
+      // Draw Accent dots
+      if (accentList.length > 0) {
+        ctx.fillStyle = accent;
+        ctx.beginPath();
+        for (let i = 0; i < accentList.length; i++) {
+          const p = accentList[i];
+          ctx.moveTo(p.x + p.size / 2, p.y);
+          ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
+        }
+        ctx.fill();
+      }
+
+      // Draw Muted dots
+      if (mutedList.length > 0) {
+        ctx.fillStyle = muted;
+        ctx.beginPath();
+        for (let i = 0; i < mutedList.length; i++) {
+          const p = mutedList[i];
+          ctx.moveTo(p.x + p.size / 2, p.y);
+          ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
+        }
+        ctx.fill();
       }
 
       ctx.restore();
 
-      // Stop rAF loop when settled and idle
-      if (!isAssembling && totalKineticEnergy < 0.08 && !isInteracting.current) {
+      // Idle settle detection: pause rAF when kinetic energy is below epsilon
+      const isStillMoving = totalKineticEnergy > 0.08 || isAssembling || isInteracting.current;
+
+      if (isStillMoving) {
+        isSettled.current = false;
+        animFrameId.current = requestAnimationFrame(renderFrame);
+      } else {
         isSettled.current = true;
         animFrameId.current = null;
-      } else {
-        animFrameId.current = requestAnimationFrame(renderFrame);
       }
     };
 
     const wakeAnimation = () => {
-      if (isSettled.current && isVisible.current) {
+      if (!animFrameId.current) {
         isSettled.current = false;
-        if (!animFrameId.current) {
-          animFrameId.current = requestAnimationFrame(renderFrame);
-        }
+        animFrameId.current = requestAnimationFrame(renderFrame);
       }
     };
 
     const handlePointerMove = (e: PointerEvent) => {
-      if (tier !== "full") return;
       const rect = canvas.getBoundingClientRect();
       pointerPos.current = {
         x: e.clientX - rect.left,
@@ -367,6 +401,7 @@ export function ParticleWordmark() {
     window.addEventListener("resize", handleResize);
 
     return () => {
+      clearTimeout(failTimeout);
       if (animFrameId.current) cancelAnimationFrame(animFrameId.current);
       themeObserver.disconnect();
       observer.disconnect();
@@ -374,29 +409,27 @@ export function ParticleWordmark() {
       canvas.removeEventListener("pointermove", handlePointerMove);
       canvas.removeEventListener("pointerleave", handlePointerLeave);
     };
-  }, [tier]);
+  }, [tier, onFail, onFrameDrawn, onEntered]);
+
+  const isExiting = phase === "exiting";
 
   return (
-    <div ref={containerRef} className="relative w-full overflow-hidden select-none">
-      {/* Real h1 stays in DOM; visually hidden once particle frame draws */}
-      <h1
-        className={`text-4xl sm:text-6xl lg:text-7xl font-extralight tracking-widest text-[var(--fg)] uppercase py-6 text-center transition-opacity duration-300 ${
-          hasDrawn ? "sr-only" : "opacity-100"
-        }`}
-      >
-        CHINEMEREM MADUEKE
-      </h1>
-
-      {/* Austensor-style Captions around hero */}
-      <div className="flex items-center justify-between py-2 border-b border-[var(--border)] mb-4 text-[11px] font-mono tracking-widest text-[var(--muted)] uppercase">
-        <span>Portfolio / 2026</span>
-        <span className="hidden sm:inline">Frontend &amp; Software</span>
-        <span>Lagos, Nigeria</span>
-      </div>
-
-      {/* Particle Canvas (aria-hidden) */}
+    <div
+      ref={containerRef}
+      onTransitionEnd={() => {
+        if (isExiting && onExited) {
+          onExited();
+        }
+      }}
+      className="relative w-full overflow-hidden select-none transition-all duration-600 ease-[cubic-bezier(0.22,1,0.36,1)]"
+      style={{
+        opacity: isExiting ? 0 : 1,
+        transform: isExiting ? "scale(0.98)" : "scale(1)",
+      }}
+    >
       <canvas
         ref={canvasRef}
+        id="hero-particle-canvas"
         aria-hidden="true"
         className="block mx-auto cursor-crosshair touch-none"
       />
