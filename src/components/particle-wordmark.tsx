@@ -94,15 +94,16 @@ export function ParticleWordmark({
     });
 
     const initParticles = async () => {
-      // 1. Wait for Geist font to be fully loaded
+      // 1. Wait for Syncopate font to be fully loaded
       try {
         if ("fonts" in document) {
           await Promise.race([
             Promise.all([
-              document.fonts.load("500 200px Geist"),
+              document.fonts.load('700 100px "Syncopate"'),
+              document.fonts.load('400 100px "Syncopate"'),
               document.fonts.ready,
             ]),
-            new Promise((resolve) => setTimeout(resolve, 600)),
+            new Promise((resolve) => setTimeout(resolve, 800)),
           ]);
         }
       } catch {
@@ -132,14 +133,17 @@ export function ParticleWordmark({
 
       offCtx.scale(dpr, dpr);
 
-      // Fit text to ~80% container width
-      let fontSize = isMobile ? Math.floor(width * 0.12) : Math.floor(width * 0.065);
-      fontSize = Math.min(Math.max(fontSize, 24), 88);
+      // Fit text to ~80% container width using Syncopate wide caps
+      let fontSize = isMobile ? Math.floor(width * 0.09) : Math.floor(width * 0.052);
+      fontSize = Math.min(Math.max(fontSize, 20), 72);
 
-      const computedFont =
-        getComputedStyle(container).fontFamily ||
-        "Geist, -apple-system, BlinkMacSystemFont, sans-serif";
-      offCtx.font = `500 ${fontSize}px ${computedFont}`;
+      const computedFont = 'var(--font-syncopate), "Syncopate", sans-serif';
+      offCtx.font = `700 ${fontSize}px ${computedFont}`;
+      try {
+        (offCtx as unknown as { letterSpacing?: string }).letterSpacing = "0.08em";
+      } catch {
+        // ignore
+      }
       offCtx.fillStyle = "#ffffff";
       offCtx.textAlign = "center";
       offCtx.textBaseline = "middle";
@@ -150,7 +154,7 @@ export function ParticleWordmark({
       const targetWidth = width * 0.82;
       if (textWidth > targetWidth && targetWidth > 0) {
         fontSize = Math.floor(fontSize * (targetWidth / textWidth));
-        offCtx.font = `500 ${fontSize}px ${computedFont}`;
+        offCtx.font = `700 ${fontSize}px ${computedFont}`;
       }
 
       if (isMobile) {

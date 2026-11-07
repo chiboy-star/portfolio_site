@@ -10,6 +10,8 @@
   --accent-fg: #FFFFFF;
   --ring: rgba(180, 83, 9, 0.6);
   --ink: #0A0A0B;
+  --intro-bg: #0A0A0B;
+  --intro-fg: #EDEDEE;
 
   --radius-card: 16px;
   --radius-control: 10px;
@@ -28,6 +30,8 @@
   --accent-fg: #111113;
   --ring: rgba(245, 165, 36, 0.6);
   --ink: #0A0A0B;
+  --intro-bg: #F5A524;
+  --intro-fg: #0A0A0B;
 }
 
 html[data-intro="skip"] #crack-open-intro {

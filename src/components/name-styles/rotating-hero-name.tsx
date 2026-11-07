@@ -7,18 +7,20 @@ import { pickNextStyle } from "./selector";
 
 import { WideThinStyle } from "./wide-thin";
 import { HeavyStackedStyle } from "./heavy-stacked";
-import { LetterRiseStyle } from "./letter-rise";
+import { MarkerScrawlStyle } from "./marker-scrawl";
 import { SliceStyle } from "./slice";
 import { DecodeStyle } from "./decode";
 import { OutlineFillStyle } from "./outline-fill";
 import { WeightSweepStyle } from "./weight-sweep";
+import { SoftBlurStyle } from "./soft-blur";
 import { ParticleWordmark } from "@/components/particle-wordmark";
 
 export function RotatingHeroName() {
   const tier = useTier();
   const [mounted, setMounted] = React.useState(false);
   const [activeStyle, setActiveStyle] = React.useState<NameStyleId>("wide-thin");
-  const [phase, setPhase] = React.useState<"entering" | "active" | "exiting">("active");
+  const [phase, setPhase] = React.useState<"entering" | "active" | "exiting">("entering");
+  const [isWaitingForIntro, setIsWaitingForIntro] = React.useState(true);
   const [isParticlesAvailable, setIsParticlesAvailable] = React.useState(true);
 
   const containerRef = React.useRef<HTMLDivElement | null>(null);
@@ -39,6 +41,8 @@ export function RotatingHeroName() {
 
     if (docTier === "minimal") {
       setActiveStyle("wide-thin");
+      setIsWaitingForIntro(false);
+      setPhase("active");
       return;
     }
 
@@ -54,11 +58,12 @@ export function RotatingHeroName() {
       const s = window.location.search || "";
       if (s.includes("style=particles") && isParticlesAvailable) forcedStyle = "particles";
       else if (s.includes("style=heavy-stacked")) forcedStyle = "heavy-stacked";
-      else if (s.includes("style=letter-rise")) forcedStyle = "letter-rise";
+      else if (s.includes("style=marker-scrawl") || s.includes("style=letter-rise")) forcedStyle = "marker-scrawl";
       else if (s.includes("style=slice")) forcedStyle = "slice";
       else if (s.includes("style=decode")) forcedStyle = "decode";
       else if (s.includes("style=outline-fill")) forcedStyle = "outline-fill";
       else if (s.includes("style=weight-sweep")) forcedStyle = "weight-sweep";
+      else if (s.includes("style=soft-blur")) forcedStyle = "soft-blur";
       else if (s.includes("style=wide-thin")) forcedStyle = "wide-thin";
     }
 
@@ -70,19 +75,35 @@ export function RotatingHeroName() {
       // ignore
     }
 
-    // If intro is playing, delay first enter until after intro completes (~1600ms)
-    const isIntroActive =
+    // Interplay with Intro: Wait for intro:done before animating in
+    const isIntroPlaying =
       typeof document !== "undefined" &&
       document.documentElement.getAttribute("data-intro") === "play";
 
-    const initialDelay = isIntroActive ? 1600 : 150;
-    setPhase("entering");
+    if (isIntroPlaying) {
+      setIsWaitingForIntro(true);
 
-    const enterTimer = setTimeout(() => {
-      setPhase("active");
-    }, initialDelay + 800);
+      const onIntroDone = () => {
+        setIsWaitingForIntro(false);
+        setPhase("entering");
+      };
 
-    return () => clearTimeout(enterTimer);
+      window.addEventListener("intro:done", onIntroDone, { once: true });
+
+      // Fallback timeout in case intro:done fails to fire
+      const fallbackTimer = setTimeout(() => {
+        setIsWaitingForIntro(false);
+        setPhase("entering");
+      }, 1800);
+
+      return () => {
+        window.removeEventListener("intro:done", onIntroDone);
+        clearTimeout(fallbackTimer);
+      };
+    } else {
+      setIsWaitingForIntro(false);
+      setPhase("entering");
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run strictly once on mount to preserve persistent rotation sequence across reloads
 
@@ -103,7 +124,8 @@ export function RotatingHeroName() {
         const isPaused =
           !isVisibleRef.current ||
           !isHeroInViewRef.current ||
-          isHoveredRef.current;
+          isHoveredRef.current ||
+          isWaitingForIntro;
 
         if (isPaused) {
           lastPauseTimeRef.current = performance.now();
@@ -114,7 +136,7 @@ export function RotatingHeroName() {
         setPhase("exiting");
       }, interval);
     },
-    [tier]
+    [tier, isWaitingForIntro]
   );
 
   // 3. Handle exit completion -> pick next and enter
@@ -145,7 +167,7 @@ export function RotatingHeroName() {
     }
   }, [activeStyle]);
 
-  // 5. Visibility and Hero Intersection observers
+  // 5. Visibility, Hero Intersection, and Intro Replay listeners
   React.useEffect(() => {
     if (tier === "minimal") return;
 
@@ -156,11 +178,9 @@ export function RotatingHeroName() {
       if (!visible) {
         lastPauseTimeRef.current = performance.now();
       } else {
-        // Resumed
         if (lastPauseTimeRef.current) {
           const pausedDuration = performance.now() - lastPauseTimeRef.current;
           lastPauseTimeRef.current = null;
-          // If paused longer than interval, wait a fresh 5 seconds before rotating
           if (pausedDuration > currentIntervalRef.current) {
             scheduleNextRotation(5000);
           } else {
@@ -171,6 +191,17 @@ export function RotatingHeroName() {
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Listen for in-memory intro replay
+    const handleIntroReplay = () => {
+      setIsWaitingForIntro(true);
+      const onDone = () => {
+        setIsWaitingForIntro(false);
+        setPhase("entering");
+      };
+      window.addEventListener("intro:done", onDone, { once: true });
+    };
+    window.addEventListener("intro:replay", handleIntroReplay);
 
     const container = containerRef.current;
     let observer: IntersectionObserver | null = null;
@@ -197,11 +228,11 @@ export function RotatingHeroName() {
       observer.observe(container);
     }
 
-    // Start initial rotation timer
     scheduleNextRotation();
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("intro:replay", handleIntroReplay);
       if (observer) observer.disconnect();
       if (timerRef.current) clearTimeout(timerRef.current);
     };
@@ -238,7 +269,12 @@ export function RotatingHeroName() {
 
       {/* Decorative Rotating Style Slot (aria-hidden) */}
       {mounted && tier !== "minimal" && (
-        <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center">
+        <div
+          aria-hidden="true"
+          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+            isWaitingForIntro ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
+        >
           {activeStyle === "wide-thin" && (
             <WideThinStyle
               phase={phase}
@@ -255,8 +291,8 @@ export function RotatingHeroName() {
             />
           )}
 
-          {activeStyle === "letter-rise" && (
-            <LetterRiseStyle
+          {activeStyle === "marker-scrawl" && (
+            <MarkerScrawlStyle
               phase={phase}
               onEntered={handleEntered}
               onExited={handleExited}
@@ -295,6 +331,14 @@ export function RotatingHeroName() {
             />
           )}
 
+          {activeStyle === "soft-blur" && (
+            <SoftBlurStyle
+              phase={phase}
+              onEntered={handleEntered}
+              onExited={handleExited}
+            />
+          )}
+
           {activeStyle === "particles" && (
             <ParticleWordmark
               phase={phase}
@@ -308,4 +352,3 @@ export function RotatingHeroName() {
     </div>
   );
 }
-

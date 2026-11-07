@@ -12,6 +12,7 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { useTheme } from "next-themes";
+import { useTier } from "@/hooks/use-tier";
 import {
   Briefcase,
   Layers,
@@ -37,6 +38,7 @@ interface CommandMenuProps {
 
 export function CommandMenu({ open, setOpen, projects = [] }: CommandMenuProps) {
   const { setTheme } = useTheme();
+  const tier = useTier();
   const [copied, setCopied] = React.useState(false);
 
   React.useEffect(() => {
@@ -187,20 +189,23 @@ export function CommandMenu({ open, setOpen, projects = [] }: CommandMenuProps) 
             <span>View CV / Resume</span>
           </CommandItem>
 
-          <CommandItem
-            onSelect={() =>
-              runCommand(() => {
-                try {
-                  sessionStorage.removeItem("introSeen");
-                } catch {}
-                window.location.href = "/?intro=1";
-              })
-            }
-          >
-            <RotateCcw className="mr-2 h-4 w-4 text-[var(--accent)]" />
-            <span>Replay Intro</span>
-            <CommandShortcut>?intro=1</CommandShortcut>
-          </CommandItem>
+          {tier === "full" && (
+            <CommandItem
+              onSelect={() =>
+                runCommand(() => {
+                  try {
+                    sessionStorage.removeItem("introSeen");
+                  } catch {}
+                  window.dispatchEvent(new CustomEvent("intro:replay"));
+                  toast.info("Replaying intro banner");
+                })
+              }
+            >
+              <RotateCcw className="mr-2 h-4 w-4 text-[var(--accent)]" />
+              <span>Replay Intro</span>
+              <CommandShortcut>?intro=1</CommandShortcut>
+            </CommandItem>
+          )}
         </CommandGroup>
 
         <CommandSeparator />

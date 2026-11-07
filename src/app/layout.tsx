@@ -1,6 +1,17 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import {
+  fontSyncopate,
+  fontUnbounded,
+  fontPermanentMarker,
+  fontAnton,
+  fontMajorMonoDisplay,
+  fontRubikMonoOne,
+  fontFraunces,
+  fontInstrumentSerif,
+  fontMichroma,
+} from "@/lib/fonts";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/react";
@@ -64,7 +75,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: tierDetectionScript }} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-[var(--bg)] text-[var(--fg)]`}
+        className={`${geistSans.variable} ${geistMono.variable} ${fontSyncopate.variable} ${fontUnbounded.variable} ${fontPermanentMarker.variable} ${fontAnton.variable} ${fontMajorMonoDisplay.variable} ${fontRubikMonoOne.variable} ${fontFraunces.variable} ${fontInstrumentSerif.variable} ${fontMichroma.variable} antialiased min-h-screen bg-[var(--bg)] text-[var(--fg)]`}
       >
         <ThemeProvider
           attribute="class"

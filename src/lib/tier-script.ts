@@ -42,10 +42,20 @@ export const tierDetectionScript = `(function() {
     try { seen = !!sessionStorage.getItem('introSeen'); } catch(e) {}
     var rmCheck = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    if (tier !== 'full' || rmCheck || forceSkip || (seen && !forceIntro)) {
+    var skipReason = null;
+    if (forceSkip) skipReason = 'intro=0';
+    else if (tier !== 'full') skipReason = 'tier is ' + tier;
+    else if (rmCheck) skipReason = 'prefers-reduced-motion';
+    else if (seen && !forceIntro) skipReason = 'already seen in session';
+
+    var isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    if (skipReason) {
       document.documentElement.setAttribute('data-intro', 'skip');
+      if (isDev) console.log('[intro] skip (' + skipReason + ')');
     } else {
       document.documentElement.setAttribute('data-intro', 'play');
+      if (isDev) console.log('[intro] play');
     }
   } catch(e) {
     window.__PAGE_TIER = 'lite';

@@ -3,18 +3,19 @@ import type { NameStyleId } from "./types.ts";
 export const ALL_TEXT_STYLES: NameStyleId[] = [
   "wide-thin",
   "heavy-stacked",
-  "letter-rise",
+  "marker-scrawl",
   "slice",
   "decode",
   "outline-fill",
   "weight-sweep",
+  "soft-blur",
 ];
 
 /**
  * Builds candidate pool with weights and picks a style that differs from lastId.
  * - Minimal tier: always 'wide-thin'
- * - Lite tier: styles 1-7 equally weighted (particles excluded)
- * - Full tier: styles 1-7 weight 1 each, particles weight 2 (if available)
+ * - Lite tier: styles 1-8 equally weighted (particles excluded)
+ * - Full tier: styles 1-8 weight 1 each, particles weight 2 (if available)
  */
 export function pickNextStyle(
   lastId: string | null,
@@ -26,17 +27,20 @@ export function pickNextStyle(
     return "wide-thin";
   }
 
+  // Normalize legacy style name if stored
+  const normalizedLastId = lastId === "letter-rise" ? "marker-scrawl" : lastId;
+
   // Construct weighted pool excluding lastId
   const pool: NameStyleId[] = [];
 
   for (const style of ALL_TEXT_STYLES) {
-    if (style !== lastId) {
+    if (style !== normalizedLastId) {
       pool.push(style);
     }
   }
 
   // Add particles with 2x weight on full tier
-  if (tier === "full" && isParticlesAvailable && lastId !== "particles") {
+  if (tier === "full" && isParticlesAvailable && normalizedLastId !== "particles") {
     pool.push("particles");
     pool.push("particles");
   }

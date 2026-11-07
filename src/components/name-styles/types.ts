@@ -1,11 +1,12 @@
 export type NameStyleId =
   | "wide-thin"
   | "heavy-stacked"
-  | "letter-rise"
+  | "marker-scrawl"
   | "slice"
   | "decode"
   | "outline-fill"
   | "weight-sweep"
+  | "soft-blur"
   | "particles";
 
 export interface NameStyleProps {
@@ -15,4 +16,3 @@ export interface NameStyleProps {
   onExited?: () => void;
   onFailed?: () => void;
 }
-

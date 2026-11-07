@@ -3,24 +3,44 @@
 import * as React from "react";
 
 export function CrackOpenIntro() {
-  // Always true initially on server and client to preserve 100% hydration parity.
-  // CSS rule `html[data-intro="skip"] #crack-open-intro { display: none !important; }`
-  // instantly hides it before paint if skipped, with zero layout flash or React mismatch.
   const [visible, setVisible] = React.useState(true);
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const wordmarkRef = React.useRef<HTMLDivElement | null>(null);
+  const animIdRef = React.useRef<number | null>(null);
 
+  // Dedicated replay listener that persists throughout the session
   React.useEffect(() => {
-    // Check if intro is skipped by tier-script, preferences, or sessionStorage
+    const handleReplay = () => {
+      try {
+        sessionStorage.removeItem("introSeen");
+      } catch {
+        // ignore
+      }
+      document.documentElement.setAttribute("data-intro", "play");
+      setVisible(true);
+    };
+
+    window.addEventListener("intro:replay", handleReplay);
+    return () => window.removeEventListener("intro:replay", handleReplay);
+  }, []);
+
+  // Animation lifecycle effect
+  React.useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // Check if intro is skipped by tier-script, preferences, or sessionStorage
     const isSkip =
       document.documentElement.getAttribute("data-intro") === "skip" ||
       (!window.location.search.includes("intro=1") && Boolean(sessionStorage.getItem("introSeen")));
+
     if (isSkip) {
       document.documentElement.setAttribute("data-intro", "skip");
       setVisible(false);
+      window.dispatchEvent(new CustomEvent("intro:done"));
       return;
     }
+
+    if (!visible) return;
 
     const canvas = canvasRef.current;
     const wordmark = wordmarkRef.current;
@@ -28,26 +48,32 @@ export function CrackOpenIntro() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Immediately size and paint solid #0A0A0B ink slab on canvas at mount
+    if (animIdRef.current) {
+      cancelAnimationFrame(animIdRef.current);
+      animIdRef.current = null;
+    }
+
+    document.documentElement.setAttribute("data-intro", "play");
+
+    const isDark = document.documentElement.classList.contains("dark");
+    const slabColor = isDark ? "#F5A524" : "#0A0A0B";
+
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    ctx.fillStyle = "#0A0A0B";
+    ctx.fillStyle = slabColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    let animId: number;
+    if (wordmark) {
+      wordmark.style.transform = "skewX(-10deg) scale(1.04)";
+      wordmark.style.opacity = "1";
+    }
+
     const startTime = performance.now();
     const holdDuration = 400; // 0 to 400ms hold
     const ringStepInterval = 90; // 90ms per Chebyshev ring step
     const totalSteps = 7;
     const liftDuration = 300; // 1300 to 1600ms wordmark lift & fade
     const totalDuration = holdDuration + (totalSteps * ringStepInterval) + liftDuration; // ~1330ms (<= 1.6s)
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    resize();
-    window.addEventListener("resize", resize);
 
     const cols = 14;
     const cellSize = Math.ceil(window.innerWidth / cols);
@@ -85,8 +111,8 @@ export function CrackOpenIntro() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (elapsed < holdDuration) {
-        // Full solid ink slab
-        ctx.fillStyle = "#0A0A0B";
+        // Full solid ink or amber slab
+        ctx.fillStyle = slabColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         canvas.setAttribute("data-intro-phase", "hold");
       } else {
@@ -94,7 +120,7 @@ export function CrackOpenIntro() {
         const currentStep = Math.min(totalSteps + 1, Math.floor(ringElapsed / ringStepInterval));
         canvas.setAttribute("data-intro-phase", `step-${currentStep}`);
 
-        ctx.fillStyle = "#0A0A0B";
+        ctx.fillStyle = slabColor;
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
             // Chebyshev distance: max(|dx|, |dy|)
@@ -114,7 +140,7 @@ export function CrackOpenIntro() {
       }
 
       if (elapsed < totalDuration) {
-        animId = requestAnimationFrame(render);
+        animIdRef.current = requestAnimationFrame(render);
       } else {
         try {
           sessionStorage.setItem("introSeen", "true");
@@ -123,16 +149,18 @@ export function CrackOpenIntro() {
         }
         document.documentElement.setAttribute("data-intro", "skip");
         setVisible(false);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("intro:done"));
+        }
       }
     };
 
-    animId = requestAnimationFrame(render);
+    animIdRef.current = requestAnimationFrame(render);
 
     return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("resize", resize);
+      if (animIdRef.current) cancelAnimationFrame(animIdRef.current);
     };
-  }, []);
+  }, [visible]);
 
   if (!visible) return null;
 
@@ -149,11 +177,11 @@ export function CrackOpenIntro() {
       />
       <script
         dangerouslySetInnerHTML={{
-          __html: `(function(){var c=document.getElementById('crack-open-canvas');if(c&&document.documentElement.getAttribute('data-intro')!=='skip'){c.width=window.innerWidth;c.height=window.innerHeight;var x=c.getContext('2d');if(x){x.fillStyle='#0A0A0B';x.fillRect(0,0,c.width,c.height);c.setAttribute('data-intro-phase','hold');}}})();`,
+          __html: `(function(){var c=document.getElementById('crack-open-canvas');if(c&&document.documentElement.getAttribute('data-intro')!=='skip'){c.width=window.innerWidth;c.height=window.innerHeight;var x=c.getContext('2d');if(x){var d=document.documentElement.classList.contains('dark');x.fillStyle=d?'#F5A524':'#0A0A0B';x.fillRect(0,0,c.width,c.height);c.setAttribute('data-intro-phase','hold');}}})();`,
         }}
       />
 
-      {/* Stacked Wordmark: "CHINEMEREM" over "MADUEKE", Geist 800, skewX(-10deg) */}
+      {/* Stacked Wordmark: "CHINEMEREM" over "MADUEKE", Unbounded 900, skewX(-10deg) */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-4">
         <div
           ref={wordmarkRef}
@@ -161,14 +189,15 @@ export function CrackOpenIntro() {
             transform: "skewX(-10deg) scale(1.04)",
             lineHeight: 0.85,
             width: "min(70vw, 980px)",
+            fontFamily: "var(--font-unbounded), sans-serif",
           }}
-          className="text-center font-extrabold uppercase tracking-tight text-[#EDEDEE]"
+          className="text-center font-black uppercase tracking-tight text-[var(--intro-fg)]"
         >
           <div className="text-[clamp(2.5rem,8vw,7.5rem)] tracking-[-0.04em]">
-            <span className="text-[var(--accent)]">C</span>HINEMEREM
+            <span className="text-[#F5A524] dark:text-[#0A0A0B] dark:text-[1.15em] inline-block font-black">C</span>HINEMEREM
           </div>
           <div className="text-[clamp(2.5rem,8vw,7.5rem)] tracking-[-0.04em]">
-            <span className="text-[var(--accent)]">M</span>ADUEKE
+            <span className="text-[#F5A524] dark:text-[#0A0A0B] dark:text-[1.15em] inline-block font-black">M</span>ADUEKE
           </div>
         </div>
       </div>

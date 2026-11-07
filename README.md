@@ -109,39 +109,83 @@ Access the management dashboard at `/admin`.
 
 ---
 
-## 🔀 Rotating Hero Name & Typographic Fallback System
+## 🎬 Crack-Open Intro Overlay (Homage to awards.racing)
 
-The hero name features an orchestrated rotation system with 8 modular typographic styles:
+The opening banner is an ink/amber slab that cracks open in stepped square Chebyshev rings (pixel staircase):
+- **High-Contrast Theme Tokens:**
+  - **Light Theme:** Page `--bg` is `#FAFAF7`, slab `--intro-bg` is `#0A0A0B` (solid ink, 18.9:1 contrast), wordmark is off-white (`#EDEDEE`, 16.9:1 contrast) with amber initials (`#F5A524`).
+  - **Dark Theme:** Page `--bg` is `#0A0A0B`, slab `--intro-bg` is `#F5A524` (solid amber, 9.7:1 contrast), wordmark is ink (`#0A0A0B`, 9.7:1 contrast) with enlarged ink initials (`1.15em`).
+- **Typography:** **Unbounded 900** uppercase, stacked on two lines ("CHINEMEREM" over "MADUEKE"), skewed `-10deg` (`transform: skewX(-10deg)`).
+- **Sequence (<= 1.6s):**
+  - **0–400ms:** Solid slab and wordmark hold (wordmark scales 1.04 $\to$ 1.0).
+  - **400–1300ms:** Chebyshev distance rings expanding from center in 7 steps (90ms/step), creating a pixel staircase opening.
+  - **1300–1600ms:** Wordmark lifts -8vh and fades out; overlay is removed from the DOM.
+- **Session Rules & Replay:**
+  - Played once per session (sets `sessionStorage.introSeen = "true"` on completion).
+  - `?intro=1`: Forces replay on load regardless of session storage.
+  - `?intro=0`: Forces skip for automated testing or quick navigation.
+  - **Replay Intro Command:** Available in the Command Menu (`Ctrl+K` / `Cmd+K` $\to$ "Replay Intro", Full tier only). Replays the sequence in-memory via custom event without reloading the page.
+  - **Interplay with Hero Name:** Emits an `intro:done` event upon completion; the rotating hero name waits for this event before animating in so it never animates blindly behind the slab.
 
-1. **`wide-thin`**: Extreme letter-spacing tracking animation with clean minimalist font-weight. (Default fallback for Minimal tier).
-2. **`heavy-stacked`**: Stacked two-line Geist 800 with `-10deg` skew and accent initials ("CHINEMEREM" over "MADUEKE", awards.racing homage).
-3. **`letter-rise`**: Staggered baseline reveal per glyph with subtle bounce.
-4. **`slice`**: Horizontal 3-band staggered clip-path offset.
-5. **`decode`**: Scrambled matrix glyph decoding into the final name.
-6. **`outline-fill`**: Crisp text stroke with dynamic gradient filling.
-7. **`weight-sweep`**: Sinusoidal variable font-weight wave running across individual letters (100 -> 800 -> 300).
-8. **`particles`**: Interactive cursor-repelling canvas particles (~4,000–8,000 dots, Full tier only, 2x selection weight).
+---
+
+## 🔀 Rotating Hero Name & Typographic System (9 Modular Styles)
+
+The hero name features an orchestrated rotation system with 9 modular typographic display styles, self-hosted via `next/font/google` (`display: "swap"`, `preload: false`, on-demand transfer):
+
+1. **`wide-thin`**: **Syncopate (400)**. Wide caps, generous letter-spacing tracking. (Static lock for Minimal tier).
+2. **`heavy-stacked`**: **Unbounded (900)**. Stacked two-line skewed `-10deg` with amber accent initials.
+3. **`marker-scrawl`**: **Permanent Marker (400)**. Letters appear left to right with random $\pm 3^\circ$ tilt, followed by a dynamic SVG scribble underline drawn with `stroke-dashoffset`.
+4. **`slice`**: **Anton (400)**. Tall condensed caps cut into 3 horizontal bands with alternating clip-path translation.
+5. **`decode`**: **Major Mono Display (400)**. Scrambled matrix glyph decoding stream locking left to right.
+6. **`outline-fill`**: **Rubik Mono One (400)**. Outlined text-stroke typography filling with a gradient wipe from left to right.
+7. **`weight-sweep`**: **Fraunces (variable)**. Continuous sinusoidal font weight wave (100 $\to$ 900 $\to$ 400) sweeping across individual letters.
+8. **`soft-blur`**: **Instrument Serif (italic)**. Quiet, editorial italic serif resolving gently from `blur(8px)` and opacity 0.
+9. **`particles`**: **Syncopate sampling mask**. Interactive cursor-repelling canvas dot name (~4,000–8,000 dots, Full tier only, 2x selection weight).
 
 ### Selection & Rotation Lifecycle
-- **Initial Pick:** On page load, randomly selects a style different from the previous visit (`localStorage` key `cm_last_name_style`). Minimal tier is hard-locked to `wide-thin`.
+- **Initial Pick:** On page load, randomly selects a style different from the previous visit (`localStorage` key `last_name_style`). Minimal tier is hard-locked to `wide-thin`.
 - **Timer & Rotation:** Periodically transitions between styles every 30–60 seconds.
 - **Smart Pause Safeguards:** The rotation timer automatically pauses when:
   - The tab is hidden or backgrounded (`document.visibilityState !== "visible"`).
   - The hero is scrolled out of the viewport (`IntersectionObserver`).
   - The user's pointer hovers over the hero name area.
-- **Particle Safeguard (1.5s Timeout):** If the particle canvas fails to draw its initial frame within 1.5 seconds (due to font load delays or canvas initialization failure), it automatically triggers a graceful exit and falls back to another rotating typographic style.
-- **Zero CLS:** The hero name container is height-locked (`h-[110px] sm:h-[140px] lg:h-[160px]`) with absolute positioning for decorative variations, guaranteeing zero Cumulative Layout Shift during transitions.
+  - The crack-open intro is actively playing.
+- **Font Load Safeguard (1.5s Timeout):** Each style awaits its font (`waitForFont(...)`). If a font fails to load or times out after 1.5 seconds, it falls back cleanly to the Geist sans typography.
+- **Zero CLS:** The hero name container is height-locked (`h-[110px] sm:h-[140px] lg:h-[160px]`) with absolute positioning for decorative variations, guaranteeing zero Cumulative Layout Shift during transitions (measured CLS: 0.0003).
+
+---
+
+## 🔤 How to Add or Swap a Name Style Font
+
+1. **Declare the Google Font in [`src/lib/fonts.ts`](file:///c:/Users/chine/Downloads/portfolio_site/src/lib/fonts.ts):**
+   ```typescript
+   import { Your_Font } from "next/font/google";
+
+   export const fontYourFont = Your_Font({
+     weight: "400", // or ["400", "700"]
+     subsets: ["latin"],
+     display: "swap",
+     preload: false, // Ensures font is downloaded on-demand only when style renders
+     variable: "--font-your-font",
+   });
+   ```
+2. **Expose the CSS variable in [`src/app/layout.tsx`](file:///c:/Users/chine/Downloads/portfolio_site/src/app/layout.tsx):**
+   Add `${fontYourFont.variable}` to `<body>` className.
+3. **Register the style ID in [`src/components/name-styles/types.ts`](file:///c:/Users/chine/Downloads/portfolio_site/src/components/name-styles/types.ts)** and [`selector.ts`](file:///c:/Users/chine/Downloads/portfolio_site/src/components/name-styles/selector.ts).
+4. **Implement the style component:**
+   Use `waitForFont("Your Font", "400")` inside a `useEffect`, apply `fontFamily: "var(--font-your-font), sans-serif"`, and handle `phase: "entering" | "active" | "exiting"`.
 
 ---
 
 ## 🧪 Testing & Verification
 
 ```bash
-# Run unit tests (testing name styles selection, pause guards, and store logic)
+# Run unit tests (testing name styles selection, pause guards, intro skip logic)
 npm test
 
-# Run Playwright automated verification suite (hydration across 5 scenarios, CLS, reload stability, particle render)
-node scripts/verify-round3.mjs
+# Run Playwright automated verification suite (intro light/dark, replay event, all 9 styles, CLS, network on-demand fonts)
+node scripts/verify-round4.mjs
 ```
 
 ---
