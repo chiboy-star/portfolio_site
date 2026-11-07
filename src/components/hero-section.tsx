@@ -14,10 +14,16 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({
-  headline = "Junior Frontend Developer. Open to internships.",
+  headline = "Junior Frontend Developer.",
   bio = "I'm a second-year Software Engineering student at Pan-Atlantic University with a strong foundation in front-end development. I specialize in building responsive, API-driven web applications using JavaScript, React, and Next.js, with ambitions in back-end development and cybersecurity.",
   status = "Open to internships",
 }: HeroSectionProps) {
+  // Ensure repeated status is cleanly dropped from headline
+  const cleanHeadline = headline
+    .replace(/\.?\s*Open to internships\.?/i, "")
+    .trim()
+    .replace(/\.*$/, ".");
+
   return (
     <section id="hero" className="relative mx-auto max-w-[1120px] px-4 pt-8 pb-16 sm:px-6 lg:px-8">
       {/* Crack-open Intro: Server-rendered, visible on first paint unless skipped */}
@@ -35,14 +41,14 @@ export function HeroSection({
 
       {/* Role and Bio */}
       <div className="mt-8 max-w-2xl">
-        {/* Status Line with Static Dot */}
-        <div className="inline-flex items-center gap-2 mb-4 rounded-[var(--radius-pill)] border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs text-[var(--muted)]">
+        {/* Status Line with Static Dot: plain text line, no border, no background, no animation */}
+        <div className="flex items-center gap-2 mb-4 text-xs font-mono uppercase tracking-wider text-[var(--muted)] select-none">
           <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
-          <span className="font-medium text-[var(--fg)]">{status}</span>
+          <span className="text-[var(--fg)]">{status}</span>
         </div>
 
         <p className="text-xl sm:text-2xl font-light text-[var(--fg)] tracking-tight mb-4">
-          {headline}
+          {cleanHeadline}
         </p>
 
         <p className="text-sm sm:text-base text-[var(--muted)] leading-relaxed">

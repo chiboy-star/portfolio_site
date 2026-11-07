@@ -168,11 +168,13 @@ export function CrackOpenIntro() {
     <div
       id="crack-open-intro"
       aria-hidden="true"
+      suppressHydrationWarning
       className="fixed inset-0 z-50 pointer-events-none select-none overflow-hidden"
     >
       <canvas
         ref={canvasRef}
         id="crack-open-canvas"
+        suppressHydrationWarning
         className="absolute inset-0 h-full w-full pointer-events-none"
       />
       <script
@@ -187,17 +189,67 @@ export function CrackOpenIntro() {
           ref={wordmarkRef}
           style={{
             transform: "skewX(-10deg) scale(1.04)",
-            lineHeight: 0.85,
+            lineHeight: 1,
             width: "min(70vw, 980px)",
-            fontFamily: "var(--font-unbounded), sans-serif",
+            fontFamily: 'var(--font-unbounded), "Unbounded", sans-serif',
           }}
-          className="text-center font-black uppercase tracking-tight text-[var(--intro-fg)]"
+          className="text-center font-black uppercase tracking-tight text-[var(--intro-fg)] select-none"
         >
-          <div className="text-[clamp(2.5rem,8vw,7.5rem)] tracking-[-0.04em]">
-            <span className="text-[#F5A524] dark:text-[#0A0A0B] dark:text-[1.15em] inline-block font-black">C</span>HINEMEREM
+          <div
+            id="intro-wordmark-line-1"
+            className="whitespace-nowrap leading-none text-[clamp(2.5rem,7.5vw,7.5rem)] tracking-[-0.04em]"
+            style={{ lineHeight: 1 }}
+          >
+            <span
+              id="intro-initial-c"
+              className="initial text-[#F5A524] dark:text-[#0A0A0B] font-black"
+              style={{
+                display: "inline",
+                fontSize: "1.15em",
+                verticalAlign: "0.035em",
+                lineHeight: 1,
+              }}
+            >
+              C
+            </span>
+            <span
+              id="intro-rest-1"
+              style={{
+                display: "inline",
+                verticalAlign: "baseline",
+                lineHeight: 1,
+              }}
+            >
+              HINEMEREM
+            </span>
           </div>
-          <div className="text-[clamp(2.5rem,8vw,7.5rem)] tracking-[-0.04em]">
-            <span className="text-[#F5A524] dark:text-[#0A0A0B] dark:text-[1.15em] inline-block font-black">M</span>ADUEKE
+          <div
+            id="intro-wordmark-line-2"
+            className="whitespace-nowrap leading-none text-[clamp(2.5rem,7.5vw,7.5rem)] tracking-[-0.04em]"
+            style={{ lineHeight: 1 }}
+          >
+            <span
+              id="intro-initial-m"
+              className="initial text-[#F5A524] dark:text-[#0A0A0B] font-black"
+              style={{
+                display: "inline",
+                fontSize: "1.15em",
+                verticalAlign: "0.035em",
+                lineHeight: 1,
+              }}
+            >
+              M
+            </span>
+            <span
+              id="intro-rest-2"
+              style={{
+                display: "inline",
+                verticalAlign: "baseline",
+                lineHeight: 1,
+              }}
+            >
+              ADUEKE
+            </span>
           </div>
         </div>
       </div>

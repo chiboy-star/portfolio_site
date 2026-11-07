@@ -250,6 +250,7 @@ export function RotatingHeroName() {
   return (
     <div
       ref={containerRef}
+      id="rotating-hero-name-container"
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
       className="relative w-full select-none h-[110px] sm:h-[140px] lg:h-[160px] flex items-center justify-center overflow-hidden"

@@ -100,12 +100,13 @@ Access the management dashboard at `/admin`.
 - **Dark, Quiet, Typographic:** Geist font family with high-contrast neutral backgrounds (`#0A0A0B` dark, `#FAFAF7` light).
 - **One Accent:** Amber (`#F5A524` in dark, `#B45309` in light), used strictly for primary CTA, active navigation underline, and focus rings.
 - **Flat Surface Hierarchy:** Single surface cards without nested cards.
+- **Status & Clean Headline:** Replaced the previous bordered status badge with a quiet, unbordered mono label with a static green status dot. The hero headline is kept strictly distinct from the status line (`"Junior Frontend Developer."`), avoiding duplicate "open to internships" phrasing.
 - **Device Tiers:**
   - **Minimal Tier:** Triggered when `prefers-reduced-motion: reduce` or `navigator.connection.saveData === true`. Zero canvas animations, plain text typography (`wide-thin` locked), lightweight payload.
   - **Lite Tier (Mobile/Touch/Narrow):** Triggered when `(pointer: coarse)`, hover is unavailable, or viewport width is under 1024px. Native scroll-snap list, swipe-to-dismiss bottom drawers, rotating typographic wordmark.
-  - **Full Tier (Desktop):** Fine pointer, hover support, width >= 1024px. Crack-open canvas intro, interactive particle wordmark (~4,000–8,000 dots) or rotating typographic styles, 3D concave cylinder carousel.
+  - **Full Tier (Desktop):** Fine pointer, hover support, width >= 1024px. Crack-open canvas intro, interactive particle wordmark (~14,000–18,000 dots) or rotating typographic styles, 3D concave cylinder carousel.
   - **Stability & Hydration Safety:** Volatile signals (`effectiveType`, `downlink`, `rtt`, `deviceMemory`, `hardwareConcurrency`) are completely excluded from tier determination. The tier is decided once per load by an inline pre-paint script. Server markup renders identical HTML across tiers, toggling visual layout strictly via CSS (`html[data-tier]`, `html[data-intro]`).
-  - **Testing Overrides & Dev Badge:** Append `?tier=full`, `?tier=lite`, or `?tier=minimal` to force a specific tier for that page load. In development mode, a small fixed corner badge indicates the active tier.
+  - **Testing Overrides & Dev Badge:** Append `?tier=full`, `?tier=lite`, or `?tier=minimal` to force a specific tier for that page load. In development mode, a small fixed corner badge (`bottom-3 right-3`) indicates the active tier without obscuring the Next.js dev tools indicator.
 
 ---
 
@@ -115,7 +116,7 @@ The opening banner is an ink/amber slab that cracks open in stepped square Cheby
 - **High-Contrast Theme Tokens:**
   - **Light Theme:** Page `--bg` is `#FAFAF7`, slab `--intro-bg` is `#0A0A0B` (solid ink, 18.9:1 contrast), wordmark is off-white (`#EDEDEE`, 16.9:1 contrast) with amber initials (`#F5A524`).
   - **Dark Theme:** Page `--bg` is `#0A0A0B`, slab `--intro-bg` is `#F5A524` (solid amber, 9.7:1 contrast), wordmark is ink (`#0A0A0B`, 9.7:1 contrast) with enlarged ink initials (`1.15em`).
-- **Typography:** **Unbounded 900** uppercase, stacked on two lines ("CHINEMEREM" over "MADUEKE"), skewed `-10deg` (`transform: skewX(-10deg)`).
+- **Typography & Baseline Alignment:** **Unbounded 900** uppercase, stacked on two lines ("CHINEMEREM" over "MADUEKE"), skewed `-10deg` (`transform: skewX(-10deg)`). Rendered as continuous single text runs per line (`<span class="initial">C</span>HINEMEREM` and `<span class="initial">M</span>ADUEKE`) with `display: inline`, `whitespace-nowrap`, and `vertical-align: 0.035em`, ensuring initials stay locked to the exact text baseline (measured baseline offset $\le 0.36\text{px}$) with zero wrapping or detachment.
 - **Sequence (<= 1.6s):**
   - **0–400ms:** Solid slab and wordmark hold (wordmark scales 1.04 $\to$ 1.0).
   - **400–1300ms:** Chebyshev distance rings expanding from center in 7 steps (90ms/step), creating a pixel staircase opening.
@@ -141,7 +142,7 @@ The hero name features an orchestrated rotation system with 9 modular typographi
 6. **`outline-fill`**: **Rubik Mono One (400)**. Outlined text-stroke typography filling with a gradient wipe from left to right.
 7. **`weight-sweep`**: **Fraunces (variable)**. Continuous sinusoidal font weight wave (100 $\to$ 900 $\to$ 400) sweeping across individual letters.
 8. **`soft-blur`**: **Instrument Serif (italic)**. Quiet, editorial italic serif resolving gently from `blur(8px)` and opacity 0.
-9. **`particles`**: **Syncopate sampling mask**. Interactive cursor-repelling canvas dot name (~4,000–8,000 dots, Full tier only, 2x selection weight).
+9. **`particles`**: **Syncopate sampling mask**. Interactive cursor-repelling canvas dot name (~14,000–18,000 dots, Full tier only, 2x selection weight). Computes exact width ratio via `(containerWidth * 0.8 / measuredWidthAt100) * 100` dynamically spanning 80%–87% of the viewport width with an automated fallback guard (`onFail`) if bounding width drops below 50%.
 
 ### Selection & Rotation Lifecycle
 - **Initial Pick:** On page load, randomly selects a style different from the previous visit (`localStorage` key `last_name_style`). Minimal tier is hard-locked to `wide-thin`.
@@ -184,8 +185,11 @@ The hero name features an orchestrated rotation system with 9 modular typographi
 # Run unit tests (testing name styles selection, pause guards, intro skip logic)
 npm test
 
-# Run Playwright automated verification suite (intro light/dark, replay event, all 9 styles, CLS, network on-demand fonts)
-node scripts/verify-round4.mjs
+# Run Round 5 Playwright verification suite (intro text, baselines, bounding boxes, particle sizing, headline, clean status, CLS)
+node scripts/verify-round5.mjs
+
+# Run Dev Overlay & Console health check (verifying 0 errors / 0 warnings across all tiers)
+node scripts/test-dev-overlay.mjs
 ```
 
 ---

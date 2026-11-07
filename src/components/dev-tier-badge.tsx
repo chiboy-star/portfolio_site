@@ -18,7 +18,7 @@ export function DevTierBadge() {
   return (
     <aside
       aria-label="Development tier indicator"
-      className="fixed bottom-2 left-2 z-50 pointer-events-none rounded-[var(--radius-pill)] border border-[var(--border)] bg-[var(--surface)]/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-[var(--accent)] select-none shadow-xs"
+      className="fixed bottom-3 right-3 z-50 pointer-events-none rounded-[var(--radius-pill)] border border-[var(--border)] bg-[var(--surface)]/90 backdrop-blur-xs px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-[var(--accent)] select-none shadow-xs"
     >
       tier: {tier}
     </aside>

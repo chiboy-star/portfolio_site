@@ -50,7 +50,7 @@ export const SEEDED_PROJECTS: Project[] = [
 ];
 
 export const DEFAULT_PROFILE: Profile = {
-  headline: "Junior Frontend Developer. Open to internships.",
+  headline: "Junior Frontend Developer.",
   bio: "I'm a second-year Software Engineering student at Pan-Atlantic University with a strong foundation in front-end development. I specialize in building responsive, API-driven web applications using JavaScript, React, and Next.js, with ambitions in back-end development and cybersecurity.",
   email: "chinemeremmadueke1@gmail.com",
   github: "https://github.com/chiboy-star",
